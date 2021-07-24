@@ -1,0 +1,8 @@
+log
+config
+.git
+log/*
+config/*
+.git/*
+classes/__pycache__/*
+classes/__pycache__
