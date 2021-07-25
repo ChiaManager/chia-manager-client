@@ -41,7 +41,7 @@ class ChiaInterpreter:
     def getWalletInformations(self):
         returndata = {}
 
-        if self.checkChiaInstallPaths() and self.checkWalletRunning():
+        if self.checkChiaInstallPaths() and self.checkWalletRunning("bool"):
             walletinfos = os.popen(self.formatChiaCommand("chia wallet show")).read().splitlines()
 
             tempreturn = {}
@@ -72,7 +72,7 @@ class ChiaInterpreter:
     def getFarmerInformations(self):
         returndata = {}
 
-        if self.checkChiaInstallPaths() and self.checkFarmerRunning():
+        if self.checkChiaInstallPaths() and self.checkFarmerRunning("bool"):
             farmerinfos = os.popen(self.formatChiaCommand("chia farm summary")).read().splitlines()
             challenges = os.popen(self.formatChiaCommand("chia farm challenges")).read().splitlines()
 
@@ -103,24 +103,28 @@ class ChiaInterpreter:
 
         return returndata
 
-    def checkWalletRunning(self):
+    def checkWalletRunning(self, type):
         self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Checking if wallet service is running.")
         count = int(os.popen(self.formatChiaCommand("netstat -antp 2>/dev/null | grep '{}' | wc -l".format(self.chiaPorts["walletport"]))).read().splitlines()[0])
         if count > 0:
             self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Wallet service running.")
+            if type == "json": return { "status" : 0, "message" : "Wallet service running." }
             return True
         else:
             self.consoleFileOutputWriter.writeToConsoleAndFile(1, "Wallet service not running.")
+            if type == "json": return { "status" : 1, "message" : "Wallet service not running." }
             return False
 
-    def checkFarmerRunning(self):
+    def checkFarmerRunning(self, type):
         self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Checking if farmer service is running.")
         count = int(os.popen(self.formatChiaCommand("netstat -antp 2>/dev/null | grep '{}' | wc -l".format(self.chiaPorts["farmerport"]))).read().splitlines()[0])
         if count > 0:
             self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Farmer service running.")
+            if type == "json": return { "status" : 0, "message" : "Farmer service running." }
             return True
         else:
             self.consoleFileOutputWriter.writeToConsoleAndFile(1, "Farmer service not running.")
+            if type == "json": return { "status" : 1, "message" : "Farmer service not running." }
             return False
 
     def formatChiaCommand(self, command):

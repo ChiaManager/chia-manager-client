@@ -34,6 +34,8 @@ class CommandInterpreter:
                     command[0] = self.requestBuilder.getFormatedInfo(self.chiaConfigParser.get_node_info()["authhash"], "backendRequest", "ChiaMgmt\\Nodes\\Nodes_Api", "Nodes_Api", "updateSystemInfo", self.querySystemData());
                     command[1] = self.requestBuilder.getFormatedInfo(self.chiaConfigParser.get_node_info()["authhash"], "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "updateWalletData", self.chiaInterpreter.getWalletInformations());
                     command[2] = self.requestBuilder.getFormatedInfo(self.chiaConfigParser.get_node_info()["authhash"], "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "updateFarmData", self.chiaInterpreter.getFarmerInformations());
+                    command[3] = self.requestBuilder.getFormatedInfo(self.chiaConfigParser.get_node_info()["authhash"], "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "walletStatus", self.chiaInterpreter.checkWalletRunning("json"))
+                    command[4] = self.requestBuilder.getFormatedInfo(self.chiaConfigParser.get_node_info()["authhash"], "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "farmerStatus", self.chiaInterpreter.checkFarmerRunning("json"));
                     return command;
                 elif key == "updateNode":
                     return self.updateNode.updateNode(command[key]["data"]["link"], command[key]["data"]["version"])
@@ -47,6 +49,10 @@ class CommandInterpreter:
                     return self.requestBuilder.getFormatedInfo(self.chiaConfigParser.get_node_info()["authhash"], "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "updateWalletData", self.chiaInterpreter.getWalletInformations());
                 elif key == "queryFarmData":
                     return self.requestBuilder.getFormatedInfo(self.chiaConfigParser.get_node_info()["authhash"], "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "updateFarmData", self.chiaInterpreter.getFarmerInformations());
+                elif key == "queryWalletStatus":
+                    return self.requestBuilder.getFormatedInfo(self.chiaConfigParser.get_node_info()["authhash"], "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "walletStatus", self.chiaInterpreter.checkWalletRunning("json"))
+                elif key == "queryFarmerStatus":
+                    return self.requestBuilder.getFormatedInfo(self.chiaConfigParser.get_node_info()["authhash"], "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "farmerStatus", self.chiaInterpreter.checkFarmerRunning("json"));
             else:
                 self.consoleFileOutputWriter.writeToConsoleAndFile(1, "{}".format(command[key]["message"]))
 
