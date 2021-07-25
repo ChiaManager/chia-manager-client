@@ -53,6 +53,10 @@ class CommandInterpreter:
                     return self.requestBuilder.getFormatedInfo(self.chiaConfigParser.get_node_info()["authhash"], "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "walletStatus", self.chiaInterpreter.checkWalletRunning("json"))
                 elif key == "queryFarmerStatus":
                     return self.requestBuilder.getFormatedInfo(self.chiaConfigParser.get_node_info()["authhash"], "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "farmerStatus", self.chiaInterpreter.checkFarmerRunning("json"));
+                elif key == "restartFarmerService":
+                    return self.requestBuilder.getFormatedInfo(self.chiaConfigParser.get_node_info()["authhash"], "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "farmerServiceRestart", self.chiaInterpreter.farmerServiceRestart());
+                elif key == "restartWalletService":
+                    return self.requestBuilder.getFormatedInfo(self.chiaConfigParser.get_node_info()["authhash"], "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "walletServiceRestart", self.chiaInterpreter.walletServiceRestart());
             else:
                 self.consoleFileOutputWriter.writeToConsoleAndFile(1, "{}".format(command[key]["message"]))
 

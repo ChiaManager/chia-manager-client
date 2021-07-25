@@ -1,6 +1,6 @@
 from .ChiaConfigParser import ChiaConfigParser
 from .ConsoleFileOutputWriter import ConsoleFileOutputWriter
-import subprocess, os
+import subprocess, os, time
 
 class ChiaInterpreter:
     def __init__(self):
@@ -126,6 +126,18 @@ class ChiaInterpreter:
             self.consoleFileOutputWriter.writeToConsoleAndFile(1, "Farmer service not running.")
             if type == "json": return { "status" : 1, "message" : "Farmer service not running." }
             return False
+
+    def farmerServiceRestart(self):
+        self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Restarting farmer service.")
+        os.popen(self.formatChiaCommand("chia start farmer -r")).read().splitlines()
+        time.sleep(4)
+        return self.checkFarmerRunning("json")
+
+    def walletServiceRestart(self):
+        self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Restarting wallet service.")
+        os.popen(self.formatChiaCommand("chia start wallet -r")).read().splitlines()
+        time.sleep(4)
+        return self.checkWalletRunning("json")
 
     def formatChiaCommand(self, command):
         return 'source {} && {} && deactivate'.format(self.activatePath, command)
