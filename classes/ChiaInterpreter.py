@@ -130,13 +130,15 @@ class ChiaInterpreter:
     def farmerServiceRestart(self):
         self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Restarting farmer service.")
         os.popen(self.formatChiaCommand("chia start farmer -r")).read().splitlines()
-        time.sleep(4)
+        os.wait()
+        time.sleep(2)
         return self.checkFarmerRunning("json")
 
     def walletServiceRestart(self):
         self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Restarting wallet service.")
         os.popen(self.formatChiaCommand("chia start wallet -r")).read().splitlines()
-        time.sleep(4)
+        os.wait()
+        time.sleep(2)
         return self.checkWalletRunning("json")
 
     def formatChiaCommand(self, command):
