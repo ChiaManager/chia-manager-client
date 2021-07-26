@@ -103,6 +103,47 @@ class ChiaInterpreter:
 
             return returndata
 
+    def getHarvesterInformations(self):
+        returndata = {}
+
+        if self.checkChiaInstallPaths() and self.checkHarvesterRunning("bool"):
+            plotdirectories = os.popen(self.formatChiaCommand("chia plots show | tail -n +5")).read().splitlines()
+            filesystems = subprocess.run("df -h | tail -n +2", stdout=subprocess.PIPE,shell=True)
+            filesystemdecoded = filesystems.stdout.decode('UTF-8').splitlines()
+            returndata = {}
+            returndata["plotdirs"] = {}
+
+            for filesystem in filesystemdecoded:
+                filesystemsplitted = list(filter(None, filesystem.split(" ")))
+                if filesystemsplitted[5] != "/" and any(filesystemsplitted[5] in string for string in plotdirectories):
+                    plotdirindex = [plotdirectories.index(i) for i in plotdirectories if filesystemsplitted[5] in i]
+                    plotdirname = plotdirectories[plotdirindex[0]]
+                    returndata["plotdirs"][plotdirname] = {}
+                    returndata["plotdirs"][plotdirname]["devname"] = filesystemsplitted[0]
+                    returndata["plotdirs"][plotdirname]["mountpoint"] = filesystemsplitted[5]
+                    returndata["plotdirs"][plotdirname]["finalplotsdir"] = plotdirectories[plotdirindex[0]]
+                    returndata["plotdirs"][plotdirname]["totalsize"] = filesystemsplitted[1]
+                    returndata["plotdirs"][plotdirname]["totalused"] = filesystemsplitted[2]
+                    returndata["plotdirs"][plotdirname]["totalusedpercent"] = filesystemsplitted[4]
+
+                    plotcountproc = subprocess.run("ls -al {} | egrep '*.plot' | wc -l".format(plotdirectories[plotdirindex[0]]), stdout=subprocess.PIPE,shell=True)
+                    returndata["plotdirs"][plotdirname]["plotcount"] = int(plotcountproc.stdout.decode('UTF-8').strip())
+
+                    if(returndata["plotdirs"][plotdirname]["plotcount"] > 0):
+                        foundplots = subprocess.Popen("ls {} | egrep '*.plot'".format(plotdirectories[plotdirindex[0]]), shell=True, stdout=subprocess.PIPE)
+                        foundplots = foundplots.stdout.read().decode('UTF-8').splitlines()
+                    else:
+                        foundplots = {}
+
+                    returndata["plotdirs"][plotdirname]["plotsfound"] = foundplots
+
+            for plotdir in plotdirectories:
+                if plotdir not in returndata["plotdirs"]:
+                    returndata["plotdirs"][plotdir] = {}
+
+            self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Returning {}.".format(returndata))
+            return returndata
+
     def checkWalletRunning(self, type):
         self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Checking if wallet service is running.")
         servicerunning = subprocess.run("ps -aux | grep {} | grep -v 'grep'".format(self.chiaPorts["walletservice"]), stdout=subprocess.PIPE,shell=True)
@@ -158,6 +199,13 @@ class ChiaInterpreter:
         os.wait()
         time.sleep(2)
         return self.checkWalletRunning("json")
+
+    def harvesterServiceRestart(self):
+        self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Restarting harvester service.")
+        os.popen(self.formatChiaCommand("chia start harvester -r")).read().splitlines()
+        os.wait()
+        time.sleep(2)
+        return self.checkHarvesterRunning("json")
 
     def formatChiaCommand(self, command):
         return 'source {} && {} && deactivate'.format(self.activatePath, command)

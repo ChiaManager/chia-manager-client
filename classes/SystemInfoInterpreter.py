@@ -2,16 +2,20 @@ from .ChiaConfigParser import ChiaConfigParser
 import subprocess, os, sys
 
 class SystemInfoInterpreter:
-    def querySystemData(self):
-        data = {}
-        data["system"] = {}
-        data["system"]["load"] = self.calcLoadAvg()
-        data["system"]["memory"] = self.getMemory()
-        data["system"]["swap"] = self.getSwap()
-        data["system"]["filesystem"] = self.getFilesystems()
-        data["system"]["cpu"] = self.getCPU()
+    def __init__(self, consoleFileOutputWriter):
+        self.consoleFileOutputWriter = consoleFileOutputWriter
 
-        return data
+    def querySystemData(self):
+        returndata = {}
+        returndata["system"] = {}
+        returndata["system"]["load"] = self.calcLoadAvg()
+        returndata["system"]["memory"] = self.getMemory()
+        returndata["system"]["swap"] = self.getSwap()
+        returndata["system"]["filesystem"] = self.getFilesystems()
+        returndata["system"]["cpu"] = self.getCPU()
+
+        self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Returning {}.".format(returndata))
+        return returndata
 
     def calcLoadAvg(self):
         returndata = {}
@@ -19,6 +23,7 @@ class SystemInfoInterpreter:
         returndata["1min"] = loadavg.split(" ")[0]
         returndata["5min"] = loadavg.split(" ")[1]
         returndata["15min"] = loadavg.split(" ")[2]
+
         return returndata;
 
     def getFilesystems(self):
@@ -26,7 +31,7 @@ class SystemInfoInterpreter:
         returndata = []
 
         for filesystem in filesystems:
-            filesystemplitted = filesystem.split(" ")
+            filesystemplitted = list(filter(None, filesystem.split(" ")))
             thisfilesystem = []
             for thissplit in filesystemplitted:
                 if thissplit != "":
