@@ -111,35 +111,35 @@ class ChiaInterpreter:
             filesystems = subprocess.run("df -h | tail -n +2", stdout=subprocess.PIPE,shell=True)
             filesystemdecoded = filesystems.stdout.decode('UTF-8').splitlines()
             returndata = {}
-            returndata["plotdirs"] = {}
+            returndata["harvester"] = {}
 
             for filesystem in filesystemdecoded:
                 filesystemsplitted = list(filter(None, filesystem.split(" ")))
                 if filesystemsplitted[5] != "/" and any(filesystemsplitted[5] in string for string in plotdirectories):
                     plotdirindex = [plotdirectories.index(i) for i in plotdirectories if filesystemsplitted[5] in i]
                     plotdirname = plotdirectories[plotdirindex[0]]
-                    returndata["plotdirs"][plotdirname] = {}
-                    returndata["plotdirs"][plotdirname]["devname"] = filesystemsplitted[0]
-                    returndata["plotdirs"][plotdirname]["mountpoint"] = filesystemsplitted[5]
-                    returndata["plotdirs"][plotdirname]["finalplotsdir"] = plotdirectories[plotdirindex[0]]
-                    returndata["plotdirs"][plotdirname]["totalsize"] = filesystemsplitted[1]
-                    returndata["plotdirs"][plotdirname]["totalused"] = filesystemsplitted[2]
-                    returndata["plotdirs"][plotdirname]["totalusedpercent"] = filesystemsplitted[4]
+                    returndata["harvester"][plotdirname] = {}
+                    returndata["harvester"][plotdirname]["devname"] = filesystemsplitted[0]
+                    returndata["harvester"][plotdirname]["mountpoint"] = filesystemsplitted[5]
+                    returndata["harvester"][plotdirname]["finalplotsdir"] = plotdirectories[plotdirindex[0]]
+                    returndata["harvester"][plotdirname]["totalsize"] = filesystemsplitted[1]
+                    returndata["harvester"][plotdirname]["totalused"] = filesystemsplitted[2]
+                    returndata["harvester"][plotdirname]["totalusedpercent"] = filesystemsplitted[4]
 
                     plotcountproc = subprocess.run("ls -al {} | egrep '*.plot' | wc -l".format(plotdirectories[plotdirindex[0]]), stdout=subprocess.PIPE,shell=True)
-                    returndata["plotdirs"][plotdirname]["plotcount"] = int(plotcountproc.stdout.decode('UTF-8').strip())
+                    returndata["harvester"][plotdirname]["plotcount"] = int(plotcountproc.stdout.decode('UTF-8').strip())
 
-                    if(returndata["plotdirs"][plotdirname]["plotcount"] > 0):
+                    if(returndata["harvester"][plotdirname]["plotcount"] > 0):
                         foundplots = subprocess.Popen("ls {} | egrep '*.plot'".format(plotdirectories[plotdirindex[0]]), shell=True, stdout=subprocess.PIPE)
                         foundplots = foundplots.stdout.read().decode('UTF-8').splitlines()
                     else:
                         foundplots = {}
 
-                    returndata["plotdirs"][plotdirname]["plotsfound"] = foundplots
+                    returndata["harvester"][plotdirname]["plotsfound"] = foundplots
 
             for plotdir in plotdirectories:
-                if plotdir not in returndata["plotdirs"]:
-                    returndata["plotdirs"][plotdir] = {}
+                if plotdir not in returndata["harvester"]:
+                    returndata["harvester"][plotdir] = {}
 
             self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Returning {}.".format(returndata))
             return returndata
