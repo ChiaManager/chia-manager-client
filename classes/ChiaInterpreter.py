@@ -98,15 +98,17 @@ class ChiaInterpreter:
                 elif "Expected time to win" in farmerinfo:
                     returndata["farm"]["expected_time_to_win"] = farmerinfo.split(":")[1].strip()
 
-        returndata["farm"]["challenges"] = challenges
-        self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Returning {}.".format(returndata))
+            returndata["farm"]["challenges"] = challenges
+            self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Returning {}.".format(returndata))
 
-        return returndata
+            return returndata
 
     def checkWalletRunning(self, type):
         self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Checking if wallet service is running.")
-        count = int(os.popen(self.formatChiaCommand("netstat -antp 2>/dev/null | grep '{}' | wc -l".format(self.chiaPorts["walletport"]))).read().splitlines()[0])
-        if count > 0:
+        servicerunning = subprocess.run("ps -aux | grep {} | grep -v 'grep'".format(self.chiaPorts["walletservice"]), stdout=subprocess.PIPE,shell=True)
+        returncode = servicerunning.returncode;
+
+        if returncode == 0:
             self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Wallet service running.")
             if type == "json": return { "status" : 0, "message" : "Wallet service running." }
             return True
@@ -117,14 +119,30 @@ class ChiaInterpreter:
 
     def checkFarmerRunning(self, type):
         self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Checking if farmer service is running.")
-        count = int(os.popen(self.formatChiaCommand("netstat -antp 2>/dev/null | grep '{}' | wc -l".format(self.chiaPorts["farmerport"]))).read().splitlines()[0])
-        if count > 0:
+        servicerunning = subprocess.run("ps -aux | grep {} | grep -v 'grep'".format(self.chiaPorts["farmerservice"]), stdout=subprocess.PIPE,shell=True)
+        returncode = servicerunning.returncode;
+
+        if returncode == 0:
             self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Farmer service running.")
             if type == "json": return { "status" : 0, "message" : "Farmer service running." }
             return True
         else:
             self.consoleFileOutputWriter.writeToConsoleAndFile(1, "Farmer service not running.")
             if type == "json": return { "status" : 1, "message" : "Farmer service not running." }
+            return False
+
+    def checkHarvesterRunning(self, type):
+        self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Checking if harvester service is running.")
+        servicerunning = subprocess.run("ps -aux | grep {} | grep -v 'grep'".format(self.chiaPorts["harvesterservice"]), stdout=subprocess.PIPE,shell=True)
+        returncode = servicerunning.returncode;
+
+        if returncode == 0:
+            self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Harvester service running.")
+            if type == "json": return { "status" : 0, "message" : "Harvester service running." }
+            return True
+        else:
+            self.consoleFileOutputWriter.writeToConsoleAndFile(1, "Harvester service not running.")
+            if type == "json": return { "status" : 1, "message" : "Harvester service not running." }
             return False
 
     def farmerServiceRestart(self):

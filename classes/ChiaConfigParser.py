@@ -49,8 +49,9 @@ class ChiaConfigParser:
     def get_chia_ports(self):
         chiaInfo = self.config_object["Chia"]
         ports_array = {}
-        ports_array["walletport"] = chiaInfo["walletport"]
-        ports_array["farmerport"] = chiaInfo["farmerport"]
+        ports_array["walletservice"] = chiaInfo["walletservice"]
+        ports_array["farmerservice"] = chiaInfo["farmerservice"]
+        ports_array["harvesterservice"] = chiaInfo["harvesterservice"]
         return ports_array
 
     def updateConfig(self, section, key, value):
