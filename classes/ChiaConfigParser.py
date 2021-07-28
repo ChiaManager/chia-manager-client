@@ -93,7 +93,10 @@ class ChiaConfigParser:
                                 'type': 'wss'}
 
         self.config_object['NodeInfo'] = {'authhash': ''}
-        self.config_object['Chia'] = {'chiaactivatepath': ''}
+        self.config_object['Chia'] = {'chiaactivatepath': '',
+                                'walletservice' : 'chia_wallet',
+                                'farmerservice' : 'chia_farmer',
+                                'harvesterservice' : 'chia_harvester'}
 
         with open(self.configdir, 'w+') as configfile:
             self.config_object.write(configfile)
