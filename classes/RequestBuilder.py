@@ -2,8 +2,7 @@ import socket
 
 class RequestBuilder:
     def wsHeaders(self, hostname, authhash, socketaction):
-        reqdata = {}
-        reqdata["node"] = {}
+        reqdata = {"node": {}}
         reqdata["node"]["nodeinfo"] = {}
         reqdata["node"]["nodeinfo"]["hostname"] = hostname
         reqdata["node"]["socketaction"] = socketaction
@@ -24,4 +23,4 @@ class RequestBuilder:
         reqdata["request"]["backendInfo"]["class"] = classname
         reqdata["request"]["backendInfo"]["method"] = method
 
-        return reqdata;
+        return reqdata

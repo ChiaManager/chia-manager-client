@@ -1,5 +1,4 @@
-from .ConsoleFileOutputWriter import ConsoleFileOutputWriter
-from .ChiaConfigParser import ChiaConfigParser
+
 from io import StringIO
 from io import BytesIO
 from zipfile import ZipFile
@@ -7,24 +6,30 @@ from urllib.request import urlopen
 from datetime import datetime
 from distutils.dir_util import copy_tree
 
-import os, requests, time, subprocess, json, shutil, sys
+import os, time, subprocess, json, shutil, sys
+import logging
 from configparser import ConfigParser
 from pathlib import Path
+import requests
+
+from node.NodeConfig import NodeConfig
+
+log = logging.getLogger()
+
 
 class UpdateNode:
     def __init__(self):
         self.status = {}
-        self.consoleFileOutputWriter = ConsoleFileOutputWriter(True)
-        self.chiaconfigparser = ChiaConfigParser()
+        self.chiaconfigparser = NodeConfig()
 
     def updateNode(self, link, version):
         self.setStatus(1, "Starting Update.", 0, 2)
-        self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Starting Update.")
+        log.info("Starting Update.")
 
         scriptpath = Path(os.path.realpath(__file__))
         currdate = datetime.now()
 
-        print("Scriptpath {}".format(scriptpath))
+        log.debug(f"scriptpath: {scriptpath}")
 
         overall = True
         if self.createBackup(scriptpath, currdate):
@@ -45,20 +50,18 @@ class UpdateNode:
         else:
             overall = False
 
-
         if overall:
             self.setStatus(10, "Processed Update.", 0, 0)
-            self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Sucessfully processed update.")
+            log.info("Successfully processed update.")
             return ""
         else:
             self.setStatus(10, "Processed Update.", 1, 1)
-            self.consoleFileOutputWriter.writeToConsoleAndFile(1, "Failed processing update.")
+            log.debug("Failed processing update.")
             return ""
-
 
     def createBackup(self, scriptpath, currdate):
         self.setStatus(2, "Creating Backup", 2, 2)
-        self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Creating Backup.")
+        log.info("Creating Backup.")
 
         rootpath = scriptpath.parent.parent.parent
         scriptversion = self.chiaconfigparser.get_script_info()
@@ -70,16 +73,16 @@ class UpdateNode:
 
         if os.path.exists(todir):
             self.setStatus(2, "Creating Backup (Success)", 0, 2)
-            self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Creating Backup: Success.")
+            log.info("Creating Backup: Success.")
             return True
         else:
             self.setStatus(2, "Creating Backup (Failed)", 1, 1)
-            self.consoleFileOutputWriter.writeToConsoleAndFile(1, "Creating Backup: Failed.")
+            log.info("Creating Backup: Failed.")
             return False
 
     def downloadZIP(self, link, version):
         self.setStatus(3, "Downloading ZIP", 2, 2)
-        self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Downloading ZIP.")
+        log.info("Downloading ZIP.")
 
         results = requests.get(link)
         downloadpath = "/tmp/chia_python_client_{}.zip".format(version)
@@ -88,16 +91,16 @@ class UpdateNode:
 
         if os.path.exists(downloadpath):
             self.setStatus(3, "Downloading ZIP (Success)", 0, 2)
-            self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Downloading ZIP: Success.")
+            log.info("Downloading ZIP: Success.")
             return True
         else:
             self.setStatus(3, "Downloading ZIP (Failed)", 1, 1)
-            self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Downloading ZIP: Failed.")
+            log.info("Downloading ZIP: Failed.")
             return False
 
     def unzipUpdate(self, version, scriptpath):
         self.setStatus(4, "Unzipping Update", 2, 2)
-        self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Unzipping Update.")
+        log.info("Unzipping Update.")
 
         downloadpath = "/tmp/chia_python_client_{}.zip".format(version)
         targetpath = "{}/../chia_python_client_{}".format(scriptpath.parent.parent, version)
@@ -107,16 +110,16 @@ class UpdateNode:
 
         if os.path.exists(targetpath):
             self.setStatus(4, "Unzipping Update (Success)", 0, 2)
-            self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Unzipping Update: Success.")
+            log.info("Unzipping Update: Success.")
             return True
         else:
             self.setStatus(4, "Unzipping Update (Failed)", 1, 1)
-            self.consoleFileOutputWriter.writeToConsoleAndFile(1, "Unzipping Update: Failed.")
+            log.error("Unzipping Update: Failed.")
             return False
 
     def copyLogAndConfig(self, version, scriptpath):
         self.setStatus(5, "Copy Log and Config", 2, 2)
-        self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Copy Log and Config")
+        log.info("Copy Log and Config")
 
         scriptversion = self.chiaconfigparser.get_script_info()
         rootfoldername = os.path.basename(scriptpath.parent.parent)
@@ -131,17 +134,17 @@ class UpdateNode:
 
         if os.path.exists("{}/log".format(todir)) and  os.path.exists("{}/config".format(todir)):
             self.setStatus(4, "Copy Log and Config (Success)", 0, 2)
-            self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Copy Log and Config: Failed.")
+            log.error("Copy Log and Config: Failed.")
             return True
         else:
             self.setStatus(4, "Copy Log and Config (Failed)", 1, 1)
-            self.consoleFileOutputWriter.writeToConsoleAndFile(1, "Copy Log and Config: Failed.")
+            log.info("Copy Log and Config: Failed.")
             return False
 
 
     def testNewUpdate(self, version, scriptpath):
         self.setStatus(5, "Testing Update", 2, 2)
-        self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Testing Update.")
+        log.info("Testing Update.")
 
         targetpath = "{}/../chia_python_client_{}/chia_mgmt_node.py".format(scriptpath.parent.parent, version)
         cmd = "python {} testupdate".format(targetpath)
@@ -152,20 +155,20 @@ class UpdateNode:
 
             if callback["status"] == 0:
                 self.setStatus(5, "Testing Update (Success)", 0, 2)
-                self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Testing Update: Success.")
+                log.info("Testing Update: Success.")
                 return True
             else:
                 self.setStatus(5, "Testing Update (Failed)", 1, 1)
-                self.consoleFileOutputWriter.writeToConsoleAndFile(1, "Testing Update: Failed.")
+                log.error("Testing Update: Failed.")
                 return False
         else:
             self.setStatus(5, "Testing Update (Failed)", 1, 1)
-            self.consoleFileOutputWriter.writeToConsoleAndFile(1, "Testing Update: Failed.")
+            log.error("Testing Update: Failed.")
             return False
 
     def finishUpdate(self, version, scriptpath):
         self.setStatus(6, "Finishing Update", 2, 2)
-        self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Finishing Update.")
+        log.info("Finishing Update.")
 
         config_object = ConfigParser()
         olddirroot = os.path.basename(scriptpath.parent.parent)
@@ -173,7 +176,7 @@ class UpdateNode:
 
         updatedir = "{}/chia_python_client_{}".format(scriptpath.parent.parent.parent, version)
         newdir = "{}/{}".format(scriptpath.parent.parent.parent, olddirroot)
-        newconfig = "{}/config/chia-client.ini".format(updatedir)
+        newconfig = "{}/config/chia-node.ini".format(updatedir)
 
         if os.path.exists(newconfig):
             config_object.read(newconfig)
@@ -186,22 +189,22 @@ class UpdateNode:
                 shutil.rmtree(olddir)
                 os.rename(updatedir, newdir)
             else:
-                print("Not deleting development client")
+                print("Not deleting development node")
 
-            self.consoleFileOutputWriter.writeToConsoleAndFile(0, "This script will now be restarted in background.")
+            log.info("This script will now be restarted in background.")
             execpath = "{}/chia_mgmt_node.py".format(newdir)
             subprocess.Popen(['python', execpath], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             sys.exit()
 
             self.setStatus(6, "Finishing Update (Success)", 0, 2)
-            self.consoleFileOutputWriter.writeToConsoleAndFile(0, "Finishing Update: Success.")
+            log.info("Finishing Update: Success.")
         else:
             self.setStatus(6, "Finishing Update (Success)", 1, 1)
-            self.consoleFileOutputWriter.writeToConsoleAndFile(1, "Finishing Update: Success.")
+            log.info("Finishing Update: Success.")
 
     def revertChanges(self, version, scriptpath, currdate):
         self.setStatus(9, "Update failed... Revert changes.", 2, 2)
-        self.consoleFileOutputWriter.writeToConsoleAndFile(9, "Update failed... Revert changes.")
+        log.error("Update failed... Revert changes.")
 
         rootpath = scriptpath.parent.parent.parent
         scriptversion = self.chiaconfigparser.get_script_info()
@@ -214,7 +217,7 @@ class UpdateNode:
         shutil.rmtree(backupdir)
 
         self.setStatus(9, "Reverted Changes (Success)", 0, 2)
-        self.consoleFileOutputWriter.writeToConsoleAndFile(9, "Reverted Changes: Success.")
+        log.info("Reverted Changes: Success.")
 
     def getStatus(self):
         return self.status
