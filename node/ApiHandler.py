@@ -103,11 +103,7 @@ class ApiHandler:
                     return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Infra_Sysinfo\\Chia_Infra_Sysinfo_Api", "Chia_Infra_Sysinfo_Api", "updateSystemInfo", self.systemInfoInterpreter.get_system_info())
                 elif key == "queryWalletData":
                     return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "updateWalletData", self.chiaInterpreter.get_wallet_info())
-                elif key == "queryFarmData":
                     return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "updateFarmData", self.chiaInterpreter.get_farmer_info())
-                elif key == "queryHarvesterData":
-                    return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Harvester\\Chia_Harvester_Api", "Chia_Harvester_Api", "updateHarvesterData", self.chiaInterpreter.get_harvester_info())
-                elif key == "queryWalletStatus":
                     return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "walletStatus", self.chiaInterpreter.get_wallet_status(True))
                 elif key == "queryFarmerStatus":
                     return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "farmerStatus", self.chiaInterpreter.get_farmer_status(True))
