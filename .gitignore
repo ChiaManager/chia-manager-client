@@ -1,0 +1,14 @@
+# Ignore
+log
+config
+.git
+log/*
+.git/*
+classes/__pycache__/*
+classes/__pycache__
+.ftpconfig
+.idea
+
+
+# Allow
+!example.node.ini
