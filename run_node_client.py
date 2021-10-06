@@ -1,7 +1,6 @@
 import logging
 import os
 import json
-import pwd
 import sys
 import traceback
 
@@ -44,20 +43,6 @@ def main():
     # disallow run as root.
     if os.geteuid() == 0:
         raise Exception("Run as root user not allowed!")
-
-    pw_record = pwd.getpwnam('test')
-    homedir = pw_record.pw_dir
-    user_uid = pw_record.pw_uid
-    user_gid = pw_record.pw_gid
-    env = os.environ.copy()
-    env.update({'HOME': homedir})
-
-    whoami, _ = subprocess.Popen(
-        r'ls ~',
-        start_new_session=True,
-        env=env,
-        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    ).communicate()
 
     chia_version, _ = subprocess.Popen(
         r'. /home/test/chia-blockchain/activate && chia wallet show && deactivate',
