@@ -60,11 +60,16 @@ class NodeConfig(RawConfigParser):
         return self["Chia"]["chia_blockchain_path"]
 
     def update_config(self, section, key, value):
+        log.debug("Write new config..")
         self[section][key] = value
         with open(self.chia_config_file, "w") as conf:
+            print(conf)
             self.write(conf)
 
+        log.debug("Write new config.. Done!")
+        log.debug("Reload config..")
         self.read(self.chia_config_file)
+        log.debug("Reload config.. Done!")
 
     def _check_log_and_config_path(self):
 
