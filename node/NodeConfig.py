@@ -27,7 +27,7 @@ class NodeConfig(RawConfigParser):
         self._check_log_and_config_path()
 
         self.load_config()
-
+ 
     @classmethod
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
@@ -43,7 +43,9 @@ class NodeConfig(RawConfigParser):
         self.__server = format(connection_info["server"])
         self.__port = format(connection_info["port"])
         self.__socket_dir = format(connection_info["socketdir"])
-        self.auth_hash = format(self["Node"]["authhash"])
+        
+        if self.has_option('Node', 'authhash'):
+            self.auth_hash = format(self["Node"]["authhash"])
         
         # log config
         self.logging = self['Logging']
