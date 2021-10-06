@@ -279,7 +279,9 @@ class ChiaHandler:
 
     def run_chia_command(self, command: str) -> tuple:
         return subprocess.Popen(
-            ['source', self.chia_venv_activation_path, '&&', 'chia', command, '&&', 'deactivate'],
+            [f"source {self.chia_venv_activation_path}", '&&', 'chia', command, '&&', 'deactivate'],
+            shell=True,
+            executable='/bin/bash',
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         ).communicate()
