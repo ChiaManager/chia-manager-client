@@ -6,6 +6,10 @@ log/*
 .git/*
 classes/__pycache__/*
 classes/__pycache__
+chia_api/__pycache__
+chia_api/__pycache__/*
+node/__pycache__
+node/__pycache__/*
 .ftpconfig
 .idea
 
