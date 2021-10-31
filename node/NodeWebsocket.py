@@ -92,6 +92,8 @@ class NodeWebsocket:
         log.error("Websocket node closed.")
         log.error(f"error: {error}")
         if not self.stop_websocket:
+            # wait 5 sec to prevent a stack overflow
+            time.sleep(.5)
             self.thread_restart = True
             self.start_websocket()
         else:
