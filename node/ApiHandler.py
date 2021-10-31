@@ -50,7 +50,7 @@ class ApiHandler:
         log.debug(f"command: {command}")
         key = list(command.keys())[0]
         log.debug(f"current_key: {key}")
-
+        
         if command[key] is not None and "status" in command[key] and "message" in command[key]:
             log.debug(f"Got message from API on command {key}: {command[key]['message']}")
 
@@ -144,6 +144,3 @@ class ApiHandler:
 
         else:
             log.info(f"Command {command} not valid.")
-
-    def send_login_status(self):
-        self.websocket.send()
