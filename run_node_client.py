@@ -44,13 +44,6 @@ def main():
     if os.geteuid() == 0:
         raise Exception("Run as root user not allowed!")
 
-    chia_version, _ = subprocess.Popen(
-        r'. /home/test/chia-blockchain/activate && chia wallet show && deactivate',
-        start_new_session=True,
-        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    ).communicate()
-
-    first_start_wizard = FirstStartWizard()
     chia_interpreter = ChiaHandler()
     log.info(
         f"Starting ChiaNode python script Version: {node_config.get_script_info()} and "
@@ -59,11 +52,9 @@ def main():
 
     if already_running():
         log.info("An instance of this script is already running. Ignoring...")
-    log.info("Starting websocket node.")
+        exit(0)
 
-    if not node_config.auth_hash:
-        first_start_wizard.setFirstStart(True)
-        first_start_wizard.step1()
+    log.info("Starting websocket node.")
 
     NodeWebsocket().start_websocket()
 

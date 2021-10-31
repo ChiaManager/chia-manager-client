@@ -6,7 +6,6 @@ from functools import partial
 
 import websocket as websocket
 
-from classes.FirstStartWizard import FirstStartWizard
 from node.ApiHandler import ApiHandler
 from node.NodeConfig import NodeConfig
 from node.NodeHelper import NodeHelper
@@ -18,7 +17,6 @@ except ImportError:
     import time
 
 
-firstStartWizard = FirstStartWizard()
 log = logging.getLogger()
 
 
@@ -26,6 +24,8 @@ class NodeWebsocket:
 
     def __init__(self):
         log.info(f"Websocket connection: {NodeConfig().get_connection()}")
+        self.node_config = NodeConfig()
+
         self.thread_restart = False
         self.thread_closed = False
         self.stop_websocket = False
@@ -57,58 +57,29 @@ class NodeWebsocket:
             log.exception(traceback.format_exc())
 
     def _on_message(self, ws, message):
-
         command = json.loads(message)
 
-        log.debug(f"command: {command}")
-        log.debug(f"command: {command.keys()}")
-        log.debug(f"command.get(list(command.keys())[0]).get('status'): {command.get(list(command.keys())[0], {}).get('status') } ")
-        if command.keys() and int(command.get(list(command.keys())[0], {}).get('status')) > 0:
+        if self.node_config.auth_hash and command.keys() and int(command.get(list(command.keys())[0], {}).get('status')) > 0:
             log.debug(command)
             return
 
-        log.debug(f"command: {command}")
-        if firstStartWizard.getFirstStart():
-            key = list(command.keys())[0]
-            log.debug(command)
-            log.info(f"Got message from API on command {key}: {command[key]}")
+        api_result = ApiHandler(self.socket).interpretCommand(command)
 
-            if firstStartWizard.current_step == 2:
-                if firstStartWizard.step2(command):
-                    log.info("Finished init wizard successfully. Waiting for authentication on backend.")
-                    ws.send(
-                        json.dumps(
-                            NodeHelper.get_formated_info(
-                                NodeConfig().auth_hash, "ownRequest", "ChiaMgmt\\Nodes\\Nodes_Api", "Nodes_Api",
-                                "loginStatus", {}
+        log.debug(f"api_result: {api_result}")
+        try:
+            if api_result is not None:
+                if 0 in api_result:
+                    for key in api_result:
+                        try:
+                            ws.send(
+                                json.dumps(api_result[key])
                             )
-                        )
-                    )
+                        except Exception:
+                            log.exception(traceback.format_exc())
                 else:
-                    log.info("An error occurred during first start init")
-            elif firstStartWizard.getFirststartStep() == 3:
-                if firstStartWizard.step3(command):
-                    log.info("Finished authentication successfully. Please refer to above message.")
-                    firstStartWizard.setFirstStart(False)
-                else:
-                    log.error("An error occurred interpreting request string from api.")
-        else:
-            api_result = ApiHandler(self.socket).interpretCommand(command)
-            log.debug(f"api_result: {api_result}")
-            try:
-                if api_result is not None:
-                    if 0 in api_result:
-                        for key in api_result:
-                            try:
-                                ws.send(
-                                    json.dumps(api_result[key])
-                                )
-                            except Exception:
-                                log.exception(traceback.format_exc())
-                    else:
-                        ws.send(json.dumps(api_result, default=NodeHelper.json_serialize))
-            except Exception:
-                log.exception(traceback.format_exc())
+                    ws.send(json.dumps(api_result, default=NodeHelper.json_serialize))
+        except Exception:
+            log.exception(traceback.format_exc())
 
     def on_error(self, ws, error, *args, **kwargs):
         log.error("Websocket node closed unexpected.")
@@ -126,23 +97,11 @@ class NodeWebsocket:
             exit(0)
                 
 
-    def on_open(self, ws):            
-        auth_hash = ""
-        if not firstStartWizard.getFirstStart():
-            auth_hash = NodeConfig().auth_hash
-
-        log.info("Requesting login information from api.")
-        try:
-            ws.send(
-                json.dumps(
-                    NodeHelper.get_formated_info(
-                        auth_hash, "ownRequest", "ChiaMgmt\\Nodes\\Nodes_Api", "Nodes_Api", "loginStatus", {}
-                    )
-                )
-            )
-        except Exception:
-            log.exception(traceback.format_exc())
-
+    def on_open(self, ws) -> None:
+        while not self.get_login_status()[0]:
+            log.info("Waiting for login on server..")
+            time.sleep(5)
+        
         if self.thread_restart:
             log.debug(f"self.thread_restart: {self.thread_restart}")
             try:
@@ -155,16 +114,49 @@ class NodeWebsocket:
             except KeyboardInterrupt:
                 exit(0)
                 
-        def run(self, *args):
-            log.debug("run run")
-            while True:                
-                if (self.thread_restart and not self.stop_websocket) or self.stop_websocket:
-                    log.debug("Closing thread..")
-                    self.thread_closed = True
-                    exit(0)
-                    
-                time.sleep(5)
+
+    def get_login_status(self) -> Tuple[bool, dict]:
+        login_result = {}
+
+        try:
+            self.socket.send( 
+                json.dumps(
+                    NodeHelper.get_formated_info(
+                        NodeConfig().auth_hash or "", "ownRequest", "ChiaMgmt\\Nodes\\Nodes_Api", "Nodes_Api", "loginStatus", {}
+                    )
+                )
+            )
+            login_result = json.loads(self.socket.sock.recv())
+        except Exception:
+            log.exception(traceback.format_exc())
+            return False, {}
+
+        log.debug(f"login status: {login_result}")
+        login_status_code = login_result['loginStatus']['status']
+
+        # 010005002 = This node is waiting for authentication
+        # 010005006 = got a auth hash
+        # 010005013 = node exists but auth hash is not in node.ini
+        if login_status_code in ["010005006", "010005013"] and not self.node_config.auth_hash:
+            log.info("Got new auth hash! Write to config.")
+            self.node_config.update_config("node", "authhash", login_result['loginStatus']['data']['newauthhash'])    
+
+        elif login_status_code == 0:
+            return True, login_result
+        
+        return False, login_result
+ 
+
+    def run(self, *args):
+        log.debug("Start websocket")
+        while True:                
+            if (self.thread_restart and not self.stop_websocket) or self.stop_websocket:
+                log.debug("Closing thread..")
+                self.thread_closed = True
+                exit(0)
                 
+            time.sleep(5)
+            
         run_with_self = partial(run, self)
         thread.start_new_thread(run_with_self, ())
         
