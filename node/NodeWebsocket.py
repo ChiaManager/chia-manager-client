@@ -84,7 +84,14 @@ class NodeWebsocket:
 
     def on_error(self, ws, error, *args, **kwargs):
         log.error("Websocket node closed unexpected.")
-        log.error(error)
+        
+        if error and hasattr(error, 'status_code'):
+            log.error(f"{error.status_code}: {error}")
+
+            if error.status_code >= 400:
+                log.error(f"Critical websocket or server error, wait 15 seconds before continue.")
+                time.sleep(15)
+
         if not self.stop_websocket:
             ws.close()
 
