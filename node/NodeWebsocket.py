@@ -2,6 +2,7 @@ import json
 import logging
 import traceback
 import inspect
+from typing import Tuple
 from functools import partial
 
 import websocket as websocket
