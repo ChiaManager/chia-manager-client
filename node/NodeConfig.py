@@ -61,6 +61,11 @@ class NodeConfig(RawConfigParser):
 
     def update_config(self, section, key, value):
         log.debug("Write new config..")
+        section = section.capitalize()
+        # create section if not already exist
+        if not self.has_section(section):
+            self[section] = {}
+
         self[section][key] = value
         with open(self.chia_config_file, "w") as conf:
             print(conf)
