@@ -102,8 +102,7 @@ EOF
 
     echo "Reloading daemon, enabling and start $service_name.."
     sudo systemctl daemon-reload
-    sudo systemctl enable $service_name
-    sudo systemctl start $service_name
+    sudo systemctl enable --now $service_name
     echo "Reloading daemon, enabling and start $service_name.. Done!"
 
 fi
