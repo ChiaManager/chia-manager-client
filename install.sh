@@ -19,6 +19,7 @@ WARTXT=$(tput setaf 3)[WAR]$(tput sgr0)
 SCRIPT_PATH=`realpath "$0"`
 CHIA_NODE_CLIENT_DIR=`dirname "$SCRIPT_PATH"`
 CURRENT_USER=`whoami`
+SYSTEMD_INSTALL_PATH="/etc/systemd/system/"
 
 declare -A updateCMD;
 updateCMD[/etc/redhat-release]="sudo dnf clean all && sudo dnf update"
@@ -31,7 +32,52 @@ updateCMD[/etc/debian_version]="sudo apt-get update && sudo apt-get upgrade"
 #Global needed variables end #
 ##############################
 
-echo "#############################################################"
+if [ $CURRENT_USER == "root" ];then
+    echo -e "${WARTXT}Please do not install this script as root. Aborting."
+    exit 1
+fi
+
+echo "
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWKKWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMNOk0NMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMN0xxxONMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWN0kxxxxOXWMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWXKOxxxxxxxOXWMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWKkxxxxxxxxxxONMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWNOxxxxxxxxkkxxx0NMMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWKkxxxxxxxxxkOOxxkKWMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWXOxxxxxxxxxxxx0KkxxONMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWKkxxxxxxxxxxxxx0XOxxkXMMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMWN0xxxxxdxxxxxdxxxKNOxdxKWMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMWXOxdddxddddddddddkXNOddx0WMMMMMMMMMMMMMMMMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMXOdddddddddddddddxONNOddxKWMMMMMMMMMMMMMMMMMMMMMMMMM
+WWMMMMMMMMMMMMMMMMMMMMMMMMMW0xdddddddddddddddkXWKxddkXMMMMMMMMMMMMMMMMMMMMMMMMMM
+XKNMMMMMMMMMMMMMMMMMMMMMMMMNOdddddddddddddddx0WNOdddONMMMMMMMMMMMMMMMMMMMMMMMMMM
+0kOXWMMMMMMMMMMMMMMMMMMMMMMXkdddddddddddddddONN0dddkXMMMMMMMMMMMMMMMMMMMMMMMMMMM
+OxxkOKNWMMMMMMMMMMMMMMMMMMMNOdddddddddddoddONN0xddxKWMMMMMMMMMMMMMMMMMMMMMMMMMMM
+kxxxxxO0XWMMMMMMMMMMMMMMMMMW0dooooooooooodONN0dooxKWMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+kxxxxxxxkOKXWMMMMMMMMMMMMMMMKxooooooooodxONXOdodkXWMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+xxxxxxxxxxxkOKXWMMMMMMMMMMMMWOoooooooox0NNKxoodONMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+xxxxxxxxxxxxxxxO0XWMMMMMMMMMMXxooooookXXKOdookXWMMMMMWWNWMMMMMNXNNWMMMMMMMMMMMMM
+xxxxxkkxxxxxxxxxxxk0XNWMMMMMMWKdllox0NKxoooxKWMMMMMMN0OkOXWWWXOxkkXWMMMMMMMMMMMM
+kxxxxOOxxxxxxxxxxxxxxk0XNWMMMMWKddOXXOooox0NMMMWMMMWXkxxxkOOkkxxxxOXNWWXXNWMMMMM
+OxxxxOKkxxxxxxxxxxxddddxk0XWMMMWXXNKxod0XNMMMNK0KXX0kxdxxxxxxxxxxxxxOOOkxkKWMMMM
+0xxxxkKKkxxxddddddddddddddx0NWMMMW0ddONMMMMMNOddddddddddddxxxxxxxxxxxxxxxkXWMMMM
+Xkxxxx0NKkxdddddddddddddddddkKWMMKxkXWMMMMMMWXkdoddddddxO0KKXXKK0OkxxxxxxkKWWMMM
+WKxdddxKNXkxdddddddddddddddddxKWW00NMMMMMMMWWKxooooodkKNWMMMMMMMWWX0kxxxxxkO00KN
+MW0xdddxKWN0xdddddddddddddddddkXWNWMMMMMWXOOkdooooox0NMMMMMMMMMMMMMWNOxxxxxxxxx0
+MMW0xdddx0WWXkddddddddddddddood0WMMMMMMNXkllllllood0WMMMMMMMMMMMMMMMMNOxxxxxxOKN
+MMMWKkdddxOXWNKkddddddoooooooookXMMMMMMWNXOxolllllkNMMMMMMMMMMMMMMMMMWKxdddxxKWM
+MMMMWXOxdddx0NWNKkddooooooooooodKMMMMMMMMMMXdcclllkNMMMMMMMMMMMMMMMMMMXkddddxOXN
+MMMMMMWXOddodxOXWWXOxdoooooooood0WMMMMMMMWN0occcccdKMMMMMMMMMMMMMMMMMW0dddddddxk
+MMMMMMMMWXOxdoodkKNWNKOxoooooooo0WMMMMMMMXdc::cccccxXWMMMMMMMMMMMMMMWKxdddddxxkO
+MMMMMMMMMMWNKkxooodk0NWNKOxdollo0WMMMMMMMNxlllc::cccoOXWMMMMMMMMMMWXOdoooodxKNNW
+MMMMMMMMMMMMMWNKOxooodk0XWWXKOxkXMMMMMMMMMNXXXkl::::ccok0KXNNNNXK0kdooooood0WMMM
+MMMMMMMMMMMMMMMMWNX0kxoooxOXWWWWWMMMMMMMMMMMMMNx:::::::cclloddoolllllloooooxKWMM
+MMMMMMMMMMMMMMMMMMMMMWX0kxoox0NMMMMMMMMMMMMMMMKl;;;::::::::cccccccllloxOkxdONMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMWX0kxxKWMMMMMMMMMMMMMN0dox00koc:::::ccccccldKWMWNNWMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMWNKOXWMMMMMMMMMMMMMMWWWMMMXo;;:oO00OdcclkNMMMMMMMMMM
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMNNWMMMMMMMMMMMMMMMMMMMMNxc:cOWMMWXxxOXWMMMMMMMMMM"
 echo -e "${INFTXT}Starting installation procedure for the chia node client."
 echo -e "${ERRCOLOR}!!!!!! Please do not abort this installation. !!!!!! $NOCOLOR"
 sleep 5
@@ -63,7 +109,7 @@ if [[ "$parsedVersion" -lt "380" && "$parsedVersion" -ge "370" ]]
 then 
     echo -e "${SUCTXT}Valid Python version found! [$version]"
 else
-    echo -e "${WARTXT}The default python3 executable has a not supported version ($version). Python 3.7.x is required!"
+    echo -e "${WARTXT}The default python3 executable has a not supported version ($version). Python 3.7.x is required."
     echo -e "${INFTXT}Checking if python3.7 executable can be found..."
     command -v python3.7 >/dev/null 2>&1
     python_exec_found=$?
@@ -181,12 +227,14 @@ else
     echo -e "${WARTXT}The config file could not be written. Skipping..."
 fi
 
+
+
 #
 # Install script as service
 #
 read -p "${INFTXT}Install Chia Node Client as Service? [Y/N]" -n 1 -r
 echo    # (optional) move to a new line
-if [[ $REPLY =~ ^[Yy]$ ]]
+if [[ $REPLY =~ ^[Yy]$ ]];
 then        
     echo -e "${INFTXT}Install as Service.."
     service_name='chia-node-client.service'
@@ -208,15 +256,29 @@ SyslogIdentifier = chia-node-client
 WantedBy = user.target
 EOF
     
-    sudo mv $service_name /etc/systemd/system/$service_name
-    echo -e "${INFTXT}Install Service. Done!"
 
-    echo -e "${INFTXT}Reloading daemon, enabling and start $service_name.."
+    sudo mv $service_name ${SYSTEMD_INSTALL_PATH}${service_name}
+
+    if test -f "${SYSTEMD_INSTALL_PATH}${service_name}"; then
+        echo -e "${SUCTXT}Install Service. Done."
+    else
+        echo -e "${ERRTXT}Install Service. Failed. Skipping..."
+    fi
+
+    selinux_installed=$(which getenforce)
+    selinux_found=$?
+    if [ $selinux_found -eq 0 ]; then
+        echo -e "${INFTXT}Found installed SeLinux ($selinux_installed). Restoring defaults in ${SYSTEMD_INSTALL_PATH}${service_name}"
+        sudo restorecon -vR ${SYSTEMD_INSTALL_PATH}${service_name} >/dev/null 2>&1
+        echo -e "${SUCTXT}Done."
+    fi
+
+    echo -e "${INFTXT}Reloading daemon, enabling and start $service_name..."
     sudo systemctl daemon-reload
     sudo systemctl enable --now $service_name
-    echo -e "${INFTXT}Reloading daemon, enabling and start $service_name.. Done!"
+    echo -e "${INFTXT}Reloading daemon, enabling and start $service_name... Done!"
 
 fi
 
-echo -e "${INFTXT}Thank you $CURRENT_USER for using our chia-node-client :)"
-echo -e "${INFTXT}Have a nice day! Bye.."
+echo -ne "${INFTXT}Thank you $CURRENT_USER for using our chia-node-client \xf0\x9f\x98\x80 \n"
+echo -e "${INFTXT}Have a nice day! Bye..."
