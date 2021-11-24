@@ -36,7 +36,7 @@ class SystemInfo:
 
     @staticmethod
     def get_filesystem_info() -> list:
-        filesystems = subprocess.getoutput("df -h | tail -n +2").splitlines()
+        filesystems = subprocess.getoutput("df | tail -n +2").splitlines()
 
         file_system_info = []
         for filesystem in filesystems:

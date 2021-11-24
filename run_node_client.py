@@ -10,7 +10,6 @@ from pathlib import Path
 
 from node import __version__
 from node.NodeConfig import NodeConfig
-from classes.FirstStartWizard import FirstStartWizard
 from node.ChiaHandler import ChiaHandler
 from node.NodeLogger import NodeLogger
 from node.NodeWebsocket import NodeWebsocket

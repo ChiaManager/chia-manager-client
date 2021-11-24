@@ -6,6 +6,7 @@ CURRENT_USER=`whoami`
 
 echo Checking Python version..
 version=$(python3 -V 2>&1 | grep -Po '(?<=Python )(.+)')
+echo $version
 parsedVersion=$(echo "${version//./}")
 if [[ "$parsedVersion" -lt "380" && "$parsedVersion" -ge "370" ]]
 then 
