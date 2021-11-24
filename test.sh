@@ -1,15 +1,21 @@
 #!/bin/bash
-declare -A osInfo;
-osInfo[/etc/redhat-release]=yum
-osInfo[/etc/arch-release]=pacman
-osInfo[/etc/gentoo-release]=emerge
-osInfo[/etc/SuSE-release]=zypp
-osInfo[/etc/debian_version]=apt-get
+declare -A updateCMD;
+updateCMD[/etc/redhat-release]="yum clean all && yum update -y"
+updateCMD[/etc/debian_version]="apt-get update && apt-get upgrade -y"
+#osInfo[/etc/arch-release]=pacman
+#osInfo[/etc/gentoo-release]=emerge
+#osInfo[/etc/SuSE-release]=zypp
 
-for f in ${!osInfo[@]}
+found=false
+for f in ${!updateCMD[@]}
 do
     if [[ -f $f ]];then
-        echo Package manager: ${osInfo[$f]}
+        echo Update Command: ${updateCMD[$f]}
+        found=true       
     fi
 done
+
+if ! ($found);then
+    echo "Currently only RedHat (Fedora/Centos/RHEL) or Debian (Debian/Ubuntu/...) based distribtions are supported."
+fi
 

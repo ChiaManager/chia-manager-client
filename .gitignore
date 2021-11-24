@@ -12,7 +12,9 @@ node/__pycache__
 node/__pycache__/*
 .ftpconfig
 .idea
+test.sh
 
 
 # Allow
 !example.node.ini
+test.sh
