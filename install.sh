@@ -83,6 +83,9 @@ echo -e "${ERRCOLOR}!!!!!! Please do not abort this installation. !!!!!! $NOCOLO
 sleep 5
 echo -e "${INFTXT}Checking if system is supported..."
 
+#
+# OS Check
+#
 found=false
 for f in ${!updateCMD[@]}
 do
@@ -98,12 +101,12 @@ if ! ($found);then
     echo -e "${ERRTXT}Currently only RedHat (Fedora/Centos/RHEL) or Debian (Debian/Ubuntu/...) based distribtions are supported."
 fi
 
+#
+# Python version check
+#
 echo -e "${INFTXT}Checking Python version..."
-
 version=$(python3 -V 2>&1 | grep -Po '(?<=Python )(.+)')
 parsedVersion=$(echo "${version//./}")
-pipexec="pip3"
-pythonexec="python3"
 
 if [[ "$parsedVersion" -lt "380" && "$parsedVersion" -ge "370" ]]
 then 
@@ -238,7 +241,6 @@ if [[ $REPLY =~ ^[Yy]$ ]];
 then        
     echo -e "${INFTXT}Install as Service.."
     service_name='chia-node-client.service'
-    echo $service_name
     sudo cat > $service_name << EOF
 [Unit]
 Description = Chia Node Client Service
