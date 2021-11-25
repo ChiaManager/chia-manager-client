@@ -7,16 +7,16 @@ from ast import literal_eval
 from configparser import ConfigParser, NoSectionError
 
 from node import __version__
-from node.Singleton import Singleton
 
 log = logging.getLogger()
 
 
-class NodeConfig(RawConfigParser):
+class NodeConfig(ConfigParser):
     _instances = {}
 
     def __init__(self):
-        super().__init__()
+        super().__init__(allow_no_value=True)
+        
         root_path = Path(os.path.realpath(__file__)).parent
         self.config_dir = Path(root_path).parent.joinpath('config')
         self.chia_config_file = self.config_dir.joinpath('node.ini')
