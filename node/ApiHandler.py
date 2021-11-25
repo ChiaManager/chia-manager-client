@@ -117,13 +117,8 @@ class ApiHandler:
                     return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Harvester\\Chia_Harvester_Api", "Chia_Harvester_Api", "harvesterServiceRestart", self.chiaInterpreter.restart_harvester())
                 elif key == "queryWalletTransactions":
                     log.debug("queryWalletTransactions")
-                    log.debug("-" * 10)
-                    wallets = None
-                    try:
-                        wallets = self.chia_wallet_api.get_wallets()['wallets']
-                    except Exception:
-                        log.exception(traceback.format_exc())
-
+                    
+                    wallets = self.chia_wallet_api.get_wallets().get('wallets', None)
 
                     if wallets is None:
                         log.debug(f"No Wallets found!")

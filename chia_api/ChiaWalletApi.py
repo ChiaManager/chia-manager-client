@@ -1,17 +1,12 @@
 import logging
-import urllib3
 import json
 from typing import Union
 from pprint import pprint
 from pathlib import Path
 
-from chia_api.ChiaApi import ChiaApi
+from chia_api.ChiaApi import ChiaApi, log
 
 import requests
-
-log = logging.getLogger()
-# chia certificates can't be validated because they are self signed by default
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class ChiaWalletApi(ChiaApi):
@@ -27,7 +22,6 @@ class ChiaWalletApi(ChiaApi):
         return self.__send_wallet_request('get_wallets')
 
     def get_transactions(self, wallet_id: int):
-        log.debug(f"get_transactions for wallet_id {wallet_id}")
         return self.__send_wallet_request('get_transactions', data={'wallet_id': wallet_id})
 
     def get_height_info(self, wallet_id: int):
