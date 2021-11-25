@@ -1,8 +1,10 @@
 import sys
 import os
 import logging
+from typing import Union, Any
 from pathlib import Path
-from configparser import RawConfigParser
+from ast import literal_eval
+from configparser import ConfigParser, NoSectionError
 
 from node import __version__
 from node.Singleton import Singleton
@@ -24,6 +26,14 @@ class NodeConfig(RawConfigParser):
         self.__socket_dir = None
         self.auth_hash = None
         self.logging = {}
+        self.key_convert_map = {
+            'server': str,
+            'socketdir': str,
+            'chia_blockchain_path': Path, 
+            'log_path': Path,
+            'authhash': str, 
+            'log_level': lambda level : logging._nameToLevel[level]  if level.isalpha() else int(level)
+        }
         self._check_log_and_config_path()
 
         self.load_config()
@@ -49,6 +59,30 @@ class NodeConfig(RawConfigParser):
         
         # log config
         self.logging = self['Logging']
+
+
+    def get(self, section: str, option: str, *, raw: bool = False, vars=None, fallback: Any = None) -> Union[Any, None]:
+
+        try:
+            d = self._unify_values(section, vars)
+        except NoSectionError:
+            return fallback
+
+        option = self.optionxform(option)
+        try:
+            value = d[option]
+        except KeyError:
+            return fallback
+
+        if raw or value is None:
+            return value
+        else:
+            value = self._interpolation.before_get(self, section, option, value,d)
+
+            if self.key_convert_map.get(option):
+                return self.key_convert_map[option](value)
+
+            return literal_eval(value)
 
     def get_script_info(self):
         return __version__
