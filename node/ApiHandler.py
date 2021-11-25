@@ -8,7 +8,7 @@ from pathlib import Path
 from node.ChiaHandler import ChiaHandler
 from node.NodeHelper import NodeHelper
 from node.NodeConfig import NodeConfig
-from node.SystemInfo import SystemInfo
+from system.SystemInfo import SystemInfo
 from chia_api.ChiaWalletApi import ChiaWalletApi
 
 import websocket
