@@ -32,7 +32,6 @@ class NodeWebsocket:
         self.stop_websocket = False
 
         on_message = partial(self.catch_exc_on_message)
-        # on_open = 
         on_error = partial(self.on_error)
         on_close = partial(self.on_close)
 
@@ -47,7 +46,8 @@ class NodeWebsocket:
     def start_websocket(self, *args, **kwargs):
         log.debug(f"inspect.stack()[1][3]: {inspect.stack()[1][3]}")
         if not self.stop_websocket:
-            self.socket.run_forever()
+            #websocket.enableTrace(True)
+            self.socket.run_forever(ping_interval=5)
 
     def catch_exc_on_message(self, *args, **kwargs):
         log.debug(f"args: {args}")
