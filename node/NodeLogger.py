@@ -8,16 +8,15 @@ from pathlib import Path
 from node.NodeConfig import NodeConfig
 
 class NodeLogger:
-    def __init__(self, log_level: int = logging.INFO, log_to_stdout: bool = False):
+    def __init__(self, log_level: int = logging.INFO):
         self.log_config = NodeConfig().logging
         
         self.log_dir = Path(self.log_config.get('' ,__file__)).absolute().parents[1].joinpath('log')
         self.log_level = self.log_config.get('log_level', log_level)
-        self.log_backup_count = self.log_config.get('log_backup_count', 3)
-        self.log_to_stdout = self.log_config.get('log_to_stdout', log_to_stdout)
-        
-        self.__setup_logger()
+        self.log_backup_count = int(self.log_config.get('log_backup_count', 3))
+        self.log_to_stdout = self.log_config.get('log_to_stdout', False)
 
+        self.__setup_logger()
 
     def __setup_logger(self):
         logger = logging.getLogger()
