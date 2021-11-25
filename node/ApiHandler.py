@@ -34,7 +34,7 @@ class ApiHandler:
             'nodeUpdateStatus': None,
             'acceptNodeRequest': None,
             'querySystemInfo': None,
-            'queryWalletData': None,
+            'queryWalletData': self._wallet_data,
             'queryFarmData': None,
             'queryHarvesterData': None,
             'queryWalletStatus': None,
@@ -102,9 +102,7 @@ class ApiHandler:
                 elif key == "querySystemInfo":
                     return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Infra_Sysinfo\\Chia_Infra_Sysinfo_Api", "Chia_Infra_Sysinfo_Api", "updateSystemInfo", self.systemInfoInterpreter.get_system_info())
                 elif key == "queryWalletData":
-                    return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "updateWalletData", self.chiaInterpreter.get_wallet_info())
-                    return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "updateFarmData", self.chiaInterpreter.get_farmer_info())
-                    return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "walletStatus", self.chiaInterpreter.get_wallet_status(True))
+                    return self.request_map['queryWalletData']()
                 elif key == "queryWalletStatus":
                     return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "walletStatus", self.chiaInterpreter.get_wallet_status(True))
                 elif key == "queryFarmerStatus":
@@ -144,3 +142,24 @@ class ApiHandler:
 
         else:
             log.info(f"Command {command} not valid.")
+
+    def _wallet_data(self) -> dict:
+        log.info("Get wallet data..")
+        data = {}
+    
+        # get wallet specific data from each wallet
+        for wallet in self.chia_wallet_api.get_wallets().get('wallets', []):
+            wallet_id = wallet['id']
+
+            data[wallet_id] = {
+                'address': self.chia_wallet_api.get_next_address(wallet_id),
+                'height': self.chia_wallet_api.get_height_info(wallet_id),
+                'sync_status': self.chia_wallet_api.get_sync_status(wallet_id),
+                'type': wallet['type'],
+                'balance': self.chia_wallet_api.get_wallet_balance(wallet_id)
+            }
+
+        log.debug(f"data: {data}")
+        log.info("Get wallet data.. Done!")
+        
+        return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "updateWalletData", data)
