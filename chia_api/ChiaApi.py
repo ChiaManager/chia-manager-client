@@ -2,6 +2,8 @@ import logging
 import requests
 import urllib3
 import json
+import traceback
+from requests.exceptions import ConnectionError
 
 from typing import Union
 
@@ -18,7 +20,7 @@ class ChiaApi:
             f"{Path.home()}/.chia/mainnet/config/ssl/full_node/private_full_node.crt", 
             f"{Path.home()}/.chia/mainnet/config/ssl/full_node/private_full_node.key"
             )
-    
+        
         self.port = None
     
     def _send_request(self, url_path: str, data: dict = None) -> str:
@@ -26,16 +28,28 @@ class ChiaApi:
             raise Exception("Port is missing. Please specify a Port.")
             
         url = f"https://localhost:{self.port}/{url_path}"
-        response = requests.post(
-            url, 
-            json=data or {},
-            headers={'content-type': 'application/json'}, 
-            cert=self.cert, 
-            verify=False
-        ) 
-        
-        result = json.loads(response.text)
-        
-        del result['success']
-        print(f"result: {result}")
+        try:
+            response = requests.post(
+                url, 
+                json=data or {},
+                headers={'content-type': 'application/json'}, 
+                cert=self.cert, 
+                verify=False
+            ) 
+        except ConnectionError:
+            log.info(f"Cold not connect to {url}")
+            return {}
+
+        try:
+            result = json.loads(response.text)
+        except Exception:
+            log.exception(traceback.format_exc())
+            return {}
+
+        if result.get('success', False):
+            del result['success']
+        else:
+            log.exception(result)
+            result = {}
+
         return result
