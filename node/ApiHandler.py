@@ -1,8 +1,6 @@
 import os
 import sys
-import json
 import logging
-import traceback
 from pathlib import Path
 
 from node.ChiaHandler import ChiaHandler
@@ -108,6 +106,7 @@ class ApiHandler:
                 elif key == "querySystemInfo":
                     return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Infra_Sysinfo\\Chia_Infra_Sysinfo_Api", "Chia_Infra_Sysinfo_Api", "updateSystemInfo", self.systemInfoInterpreter.get_system_info())
                 elif key == "queryWalletData":
+                    return self.request_map[key]()
                 elif key == "queryFarmData":
                     return self.request_map[key]()
                 elif key == "queryWalletStatus":
