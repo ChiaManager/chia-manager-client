@@ -1,3 +1,3 @@
 __all__ = [
-    "ChiaApi", "ChiaWalletApi"
+    "ChiaApi", "ChiaWalletApi", "ChiaFarmerApi", "ChiaFullNodeApi", "ChiaHarvesterApi"
 ]

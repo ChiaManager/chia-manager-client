@@ -10,6 +10,9 @@ from node.NodeHelper import NodeHelper
 from node.NodeConfig import NodeConfig
 from system.SystemInfo import SystemInfo
 from chia_api.ChiaWalletApi import ChiaWalletApi
+from chia_api.ChiaFullNodeApi import ChiaFullNodeApi
+from chia_api.ChiaHarvesterApi import ChiaHarvesterApi
+from chia_api.ChiaFarmerApi import ChiaFarmerApi
 
 import websocket
 
@@ -26,7 +29,10 @@ class ApiHandler:
         self.chiaInterpreter = ChiaHandler()
         self.systemInfoInterpreter = SystemInfo()
 
+        self.full_node_api = ChiaFullNodeApi()
         self.chia_wallet_api = ChiaWalletApi()
+        self.harvester_api = ChiaHarvesterApi()
+        self.farmer_api = ChiaFarmerApi()
 
         self.request_map = {
             'loginStatus': None,
