@@ -1,20 +1,18 @@
-# Ignore
-log
-*.pyc
-config
+# folders
 .git
-log/*
-.git/*
-classes/__pycache__/*
-classes/__pycache__
-chia_api/__pycache__
-chia_api/__pycache__/*
-node/__pycache__
-node/__pycache__/*
-.ftpconfig
-.idea
-test.sh
+config
+log
 
+### Python ###
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+### VisualStudioCode ###
+.vscode/*
+*.code-workspace
+.history/
 
 # Allow
 !example.node.ini
