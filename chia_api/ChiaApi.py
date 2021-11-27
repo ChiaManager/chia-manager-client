@@ -19,8 +19,13 @@ class ChiaApi:
             f"{Path.home()}/.chia/mainnet/config/ssl/full_node/private_full_node.key"
             )
     
-    def _send_request(self, port: int, url_path: str, data: Union[dict] = None) -> str:
-        url = f"https://localhost:{port}/{url_path}"
+        self.port = None
+    
+    def _send_request(self, url_path: str, data: dict = None) -> str:
+        if self.port is None:
+            raise Exception("Port is missing. Please specify a Port.")
+            
+        url = f"https://localhost:{self.port}/{url_path}"
         response = requests.post(
             url, 
             json=data or {},
