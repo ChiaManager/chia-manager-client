@@ -12,8 +12,8 @@ class ChiaFullNodeApi(ChiaApi):
         return self._send_request('get_blockchain_state').get('blockchain_state', {})
         
     def get_block_record_by_height(self, wallet_height):
-        return self._send_request('get_block_record_by_height', data={'height': wallet_height})
+        return self._send_request('get_block_record_by_height', data={'height': wallet_height}).get('block_record', {})
         
     def get_block_record(self, header_hash: str) -> dict:
         # get header_hash from get_block_record_by_height 
-        return self._send_request('get_block_record', data={'header_hash': header_hash})
+        return self._send_request('get_block_record', data={'header_hash': header_hash}).get('block_record', {})
