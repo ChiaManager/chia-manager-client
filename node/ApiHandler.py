@@ -41,7 +41,7 @@ class ApiHandler:
             'acceptNodeRequest': None,
             'querySystemInfo': None,
             'queryWalletData': self._wallet_data,
-            'queryFarmData': None,
+            'queryFarmData': self._farmer_data,
             'queryHarvesterData': None,
             'queryWalletStatus': None,
             'queryFarmerStatus': None,
@@ -108,7 +108,8 @@ class ApiHandler:
                 elif key == "querySystemInfo":
                     return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Infra_Sysinfo\\Chia_Infra_Sysinfo_Api", "Chia_Infra_Sysinfo_Api", "updateSystemInfo", self.systemInfoInterpreter.get_system_info())
                 elif key == "queryWalletData":
-                    return self.request_map['queryWalletData']()
+                elif key == "queryFarmData":
+                    return self.request_map[key]()
                 elif key == "queryWalletStatus":
                     return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "walletStatus", self.chiaInterpreter.get_wallet_status(True))
                 elif key == "queryFarmerStatus":
@@ -164,3 +165,55 @@ class ApiHandler:
         log.info("Get wallet data.. Done!")
         
         return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "updateWalletData", data)
+
+    def _farmer_data(self) -> dict:
+        data = {}
+      
+        for wallet in self.chia_wallet_api.get_wallets().get('wallets', []):
+            wallet_id = wallet['id']
+
+            curr_data = {
+                "farmed_amount": self.chia_wallet_api.get_farmed_amount(wallet_id),
+                "expected_time_to_win": "Never (no plots)",
+                "signage_points": self.farmer_api.get_signage_points() # challenges
+            }
+
+            # get plot count and size
+            plots = self.harvester_api.get_plots().get('plots', [])
+
+            curr_data['total_size_of_plots'] = sum(map(lambda x: x["file_size"], plots))
+            curr_data['plot_count'] = len(plots)
+
+            # get farming status and estimated network space
+            blockchain_state = self.full_node_api.get_blockchain_state()
+            curr_data['farming_status'] = blockchain_state.get('blockchain_state', {}).get('sync')
+            curr_data['estimated_network_space'] = blockchain_state.get('blockchain_state', {}).get('space')
+
+            # calculate expected time to win 
+            average_block_time = (24 * 3600) / 4608 # SECONDS_PER_BLOCK
+            blocks_to_compare = 500
+
+            try:
+                curr_block = blockchain_state["peak"]
+                if curr_block is not None and curr_block['height'] > 0 and not curr_block.get('timestamp') is not None:
+                    curr_block = self.full_node_api.get_block_record(curr_block['prev_hash'])
+
+                if curr_block is not None:
+                    # get the block from the past for calculation (curr block - 500)
+                    past_block = self.full_node_api.get_block_record_by_height(curr_block['height'] - blocks_to_compare)
+                    if past_block is not None and past_block['height'] > 0 and not past_block.get('timestamp') is not None:
+                        past_block = self.full_node_api.get_block_record(past_block['prev_hash'])
+
+                    average_block_time = (curr_block['timestamp'] - past_block['timestamp']) / (curr_block['height'] - past_block['height'])
+            except (TypeError, KeyError):
+                pass
+
+            proportion = curr_data['total_size_of_plots'] / curr_data['estimated_network_space'] if curr_data['estimated_network_space'] else -1
+            minutes = int((average_block_time / 60) / proportion) if proportion else -1
+
+            curr_data['expected_time_to_win'] = minutes
+
+            data[wallet_id] = curr_data
+
+        return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farmer\\Chia_Farmer_Api", "Chia_Farmer_Api", "updateFarmData", data)
+
