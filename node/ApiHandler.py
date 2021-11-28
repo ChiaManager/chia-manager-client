@@ -214,5 +214,5 @@ class ApiHandler:
 
             data[wallet_id] = curr_data
 
-        return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farmer\\Chia_Farmer_Api", "Chia_Farmer_Api", "updateFarmData", data)
+        return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "updateFarmData", data)
 
