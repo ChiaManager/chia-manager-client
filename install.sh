@@ -22,8 +22,8 @@ CURRENT_USER=`whoami`
 SYSTEMD_INSTALL_PATH="/etc/systemd/system/"
 
 declare -A updateCMD;
-updateCMD[/etc/redhat-release]="sudo dnf clean all && sudo dnf update"
-updateCMD[/etc/debian_version]="sudo apt-get update && sudo apt-get upgrade"
+updateCMD[/etc/redhat-release]="sudo dnf clean all && sudo dnf update -y"
+updateCMD[/etc/debian_version]="sudo apt-get update && sudo apt-get upgrade -y"
 #osInfo[/etc/arch-release]=pacman
 #osInfo[/etc/gentoo-release]=emerge
 #osInfo[/etc/SuSE-release]=zypp
@@ -99,6 +99,7 @@ done
 
 if ! ($found);then
     echo -e "${ERRTXT}Currently only RedHat (Fedora/Centos/RHEL) or Debian (Debian/Ubuntu/...) based distribtions are supported."
+    exit 1
 fi
 
 #
@@ -146,7 +147,7 @@ fi
 #
 # Recheck install of pipenv package
 #
-echo -e "${INFTXT}Double-check pipenv installatation for chia node client..."
+echo -e "${INFTXT}Double-check pipenv installation for chia node client..."
 pipenv --version >/dev/null 2>&1
 if [ $? -eq 0 ]; then
     echo -e "${SUCTXT}Found Python pipenv package."

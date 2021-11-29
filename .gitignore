@@ -17,3 +17,6 @@ __pycache__/
 # Allow
 !example.node.ini
 test.sh
+
+# FTP
+.ftpconfig
