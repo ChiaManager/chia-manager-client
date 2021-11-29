@@ -18,7 +18,7 @@ class ChiaFarmerApi(ChiaApi):
         return self._send_request('get_wallets')
         
     def get_signage_points(self):
-        return self._send_request('get_signage_points')
+        return self._send_request('get_signage_points').get('signage_points', {})
 
     def get_transactions(self, wallet_id: int):
         return self._send_request('get_transactions', data={'wallet_id': wallet_id})
