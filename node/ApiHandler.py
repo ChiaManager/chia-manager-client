@@ -166,53 +166,52 @@ class ApiHandler:
         return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "updateWalletData", data)
 
     def _farmer_data(self) -> dict:
-        data = {}
+        data = {'wallets': {}}
       
         for wallet in self.chia_wallet_api.get_wallets().get('wallets', []):
             wallet_id = wallet['id']
 
-            curr_data = {
+            data['wallets'][wallet_id] = {
                 "farmed_amount": self.chia_wallet_api.get_farmed_amount(wallet_id),
-                "expected_time_to_win": "Never (no plots)",
                 "signage_points": self.farmer_api.get_signage_points() # challenges
             }
+        # get plot count and size
+        plots = self.harvester_api.get_plots().get('plots', [])
 
-            # get plot count and size
-            plots = self.harvester_api.get_plots().get('plots', [])
+        farmer = {}
+        farmer['total_size_of_plots'] = sum(map(lambda x: x["file_size"], plots))
+        farmer['plot_count'] = len(plots)
 
-            curr_data['total_size_of_plots'] = sum(map(lambda x: x["file_size"], plots))
-            curr_data['plot_count'] = len(plots)
+        # get farming status and estimated network space
+        blockchain_state = self.full_node_api.get_blockchain_state()
+        farmer['farming_status'] = blockchain_state.get('blockchain_state', {}).get('sync')
+        farmer['estimated_network_space'] = blockchain_state.get('blockchain_state', {}).get('space')
 
-            # get farming status and estimated network space
-            blockchain_state = self.full_node_api.get_blockchain_state()
-            curr_data['farming_status'] = blockchain_state.get('blockchain_state', {}).get('sync')
-            curr_data['estimated_network_space'] = blockchain_state.get('blockchain_state', {}).get('space')
+        # calculate expected time to win 
+        average_block_time = (24 * 3600) / 4608 # SECONDS_PER_BLOCK
+        blocks_to_compare = 500
 
-            # calculate expected time to win 
-            average_block_time = (24 * 3600) / 4608 # SECONDS_PER_BLOCK
-            blocks_to_compare = 500
+        try:
+            curr_block = blockchain_state["peak"]
+            if curr_block is not None and curr_block['height'] > 0 and not curr_block.get('timestamp') is not None:
+                curr_block = self.full_node_api.get_block_record(curr_block['prev_hash'])
 
-            try:
-                curr_block = blockchain_state["peak"]
-                if curr_block is not None and curr_block['height'] > 0 and not curr_block.get('timestamp') is not None:
-                    curr_block = self.full_node_api.get_block_record(curr_block['prev_hash'])
+            if curr_block is not None:
+                # get the block from the past for calculation (curr block - 500)
+                past_block = self.full_node_api.get_block_record_by_height(curr_block['height'] - blocks_to_compare)
+                if past_block is not None and past_block['height'] > 0 and not past_block.get('timestamp') is not None:
+                    past_block = self.full_node_api.get_block_record(past_block['prev_hash'])
 
-                if curr_block is not None:
-                    # get the block from the past for calculation (curr block - 500)
-                    past_block = self.full_node_api.get_block_record_by_height(curr_block['height'] - blocks_to_compare)
-                    if past_block is not None and past_block['height'] > 0 and not past_block.get('timestamp') is not None:
-                        past_block = self.full_node_api.get_block_record(past_block['prev_hash'])
+                average_block_time = (curr_block['timestamp'] - past_block['timestamp']) / (curr_block['height'] - past_block['height'])
+        except (TypeError, KeyError):
+            pass
 
-                    average_block_time = (curr_block['timestamp'] - past_block['timestamp']) / (curr_block['height'] - past_block['height'])
-            except (TypeError, KeyError):
-                pass
+        proportion = farmer['total_size_of_plots'] / farmer['estimated_network_space'] if farmer['estimated_network_space'] else -1
+        minutes = int((average_block_time / 60) / proportion) if proportion else -1
 
-            proportion = curr_data['total_size_of_plots'] / curr_data['estimated_network_space'] if curr_data['estimated_network_space'] else -1
-            minutes = int((average_block_time / 60) / proportion) if proportion else -1
+        farmer['expected_time_to_win'] = minutes
 
-            curr_data['expected_time_to_win'] = minutes
-
-            data[wallet_id] = curr_data
+        data['farmer'] = farmer
 
         return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "updateFarmData", data)
 
