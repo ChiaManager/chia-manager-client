@@ -173,12 +173,12 @@ class ApiHandler:
 
             data['wallets'][wallet_id] = {
                 "farmed_amount": self.chia_wallet_api.get_farmed_amount(wallet_id),
-                "signage_points": self.farmer_api.get_signage_points() # challenges
             }
         # get plot count and size
         plots = self.harvester_api.get_plots().get('plots', [])
 
         farmer = {}
+        farmer["signage_points"] = self.farmer_api.get_signage_points() # challenges
         farmer['total_size_of_plots'] = sum(map(lambda x: x["file_size"], plots))
         farmer['plot_count'] = len(plots)
 
