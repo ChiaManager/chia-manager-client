@@ -1,3 +1,4 @@
+import sys
 import json
 import logging
 import traceback
@@ -6,6 +7,7 @@ from typing import Tuple
 from functools import partial
 
 import websocket as websocket
+from websocket._exceptions import WebSocketConnectionClosedException
 
 from node.ApiHandler import ApiHandler
 from node.NodeConfig import NodeConfig
@@ -27,10 +29,6 @@ class NodeWebsocket:
         log.info(f"Websocket connection: {NodeConfig().get_connection()}")
         self.node_config = NodeConfig()
 
-        self.thread_restart = False
-        self.thread_closed = False
-        self.stop_websocket = False
-
         on_message = partial(self.catch_exc_on_message)
         on_error = partial(self.on_error)
         on_close = partial(self.on_close)
@@ -43,8 +41,15 @@ class NodeWebsocket:
             on_close=on_close
         )
 
+        self.thread_restart = False
+        self.thread_closed = False
+        self.stop_websocket = False
+
+
     def start_websocket(self, *args, **kwargs):
         log.debug(f"inspect.stack()[1][3]: {inspect.stack()[1][3]}")
+        self.thread_restart = False
+
         if not self.stop_websocket:
             #websocket.enableTrace(True)
             self.socket.run_forever(ping_interval=5)
@@ -84,7 +89,7 @@ class NodeWebsocket:
 
     def on_error(self, ws, error, *args, **kwargs):
         log.error("Websocket node closed unexpected.")
-        
+        log.error(error)
         if error and hasattr(error, 'status_code'):
             log.error(f"{error.status_code}: {error}")
 
@@ -92,19 +97,21 @@ class NodeWebsocket:
                 log.error(f"Critical websocket or server error, wait 15 seconds before continue.")
                 time.sleep(15)
 
-        if not self.stop_websocket:
+        if self.stop_websocket or self.thread_restart:
             ws.close()
 
     def on_close(self, ws, error, *args, **kwargs):
         log.error("Websocket node closed.")
-        log.error(f"error: {error}")
-        if not self.stop_websocket:
-            # wait 5 sec to prevent a stack overflow
-            time.sleep(.5)
-            self.thread_restart = True
-            self.start_websocket()
-        else:
-            exit(0)
+        log.error(f"error: {error}")        
+        
+        if self.stop_websocket:
+            self.thread_closed = True
+            sys,exit(0)
+
+        # wait 5 sec to prevent a stack overflow
+        time.sleep(.5)
+        self.thread_restart = True
+        self.start_websocket()
                 
 
     def on_open(self, ws) -> None:
@@ -113,6 +120,7 @@ class NodeWebsocket:
             time.sleep(5)
         
         if self.thread_restart:
+            self.socket.close()
             log.debug(f"self.thread_restart: {self.thread_restart}")
             try:
                 while not self.thread_closed:
@@ -120,7 +128,6 @@ class NodeWebsocket:
                     time.sleep(6)
                 
                 self.thread_closed = False
-                self.thread_restart = False
             except KeyboardInterrupt:
                 exit(0)
                 
@@ -137,6 +144,8 @@ class NodeWebsocket:
                 )
             )
             login_result = json.loads(self.socket.sock.recv())
+        except WebSocketConnectionClosedException:
+            self.start_websocket()
         except Exception:
             log.exception(traceback.format_exc())
             return False, {}
