@@ -184,8 +184,8 @@ class ApiHandler:
 
         # get farming status and estimated network space
         blockchain_state = self.full_node_api.get_blockchain_state()
-        farmer['farming_status'] = blockchain_state.get('blockchain_state', {}).get('sync')
-        farmer['estimated_network_space'] = blockchain_state.get('blockchain_state', {}).get('space')
+        farmer['farming_status'] = blockchain_state.get('sync')
+        farmer['estimated_network_space'] = blockchain_state.get('space')
 
         # calculate expected time to win 
         average_block_time = (24 * 3600) / 4608 # SECONDS_PER_BLOCK
