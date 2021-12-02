@@ -166,14 +166,14 @@ class ApiHandler:
         return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "updateWalletData", data)
 
     def _farmer_data(self) -> dict:
-        data = {'wallets': {}}
+        farmed_amount = {}
       
         for wallet in self.chia_wallet_api.get_wallets().get('wallets', []):
-            wallet_id = wallet['id']
+            for key, value in self.chia_wallet_api.get_farmed_amount(wallet['id']).items():
+                farmed_amount[key] = farmed_amount[key] + value if farmed_amount.get(key) is not None else value
 
-            data['wallets'][wallet_id] = {
-                "farmed_amount": self.chia_wallet_api.get_farmed_amount(wallet_id),
-            }
+        data = farmed_amount
+
         # get plot count and size
         plots = self.harvester_api.get_plots().get('plots', [])
 
@@ -211,7 +211,7 @@ class ApiHandler:
 
         farmer['expected_time_to_win'] = minutes
 
-        data['farmer'] = farmer
+        data.update(farmer)
 
         return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "updateFarmData", data)
 
