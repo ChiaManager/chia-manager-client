@@ -37,7 +37,7 @@ class ChiaApi:
                 verify=False
             ) 
         except ConnectionError:
-            log.info(f"Cold not connect to {url}")
+            log.info(f"Could not connect to {url}")
             return {}
 
         try:
