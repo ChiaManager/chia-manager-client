@@ -40,7 +40,7 @@ class ApiHandler:
             'querySystemInfo': None,
             'queryWalletData': self._wallet_data,
             'queryFarmData': self._farmer_data,
-            'queryHarvesterData': None,
+            'queryHarvesterData': self._harvester_data,
             'queryWalletStatus': None,
             'queryFarmerStatus': None,
             'queryHarvesterStatus': None,
@@ -108,6 +108,8 @@ class ApiHandler:
                 elif key == "queryWalletData":
                     return self.request_map[key]()
                 elif key == "queryFarmData":
+                    return self.request_map[key]()
+                elif key == 'queryHarvesterData':
                     return self.request_map[key]()
                 elif key == "queryWalletStatus":
                     return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "walletStatus", self.chiaInterpreter.get_wallet_status(True))
@@ -215,3 +217,15 @@ class ApiHandler:
 
         return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "updateFarmData", data)
 
+    def _harvester_data(self) -> dict:
+        plot_directories = self.harvester_api.get_plot_directories()
+        plots = self.harvester_api.get_plots()
+
+        data = {plot_path:[] for plot_path in plot_directories}
+
+        for plot in plots:
+            for plot_path in plot_directories:
+                if plot['filename'].startswith(plot_path):
+                    data[plot_path].append(plot)
+
+        return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Harvester\\Chia_Harvester_Api", "Chia_Harvester_Api", "updateHarvesterData", data)
