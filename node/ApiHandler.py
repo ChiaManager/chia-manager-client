@@ -177,7 +177,11 @@ class ApiHandler:
         data = farmed_amount
 
         # get plot count and size
-        plots = self.harvester_api.get_plots().get('plots', [])
+        print(self.harvester_api.get_plots())
+        plots = self.harvester_api.get_plots()
+        if 'plots' in plots: plots = plots.get('plots', [])
+
+        #plots = self.harvester_api.get_plots().get('plots', [])
 
         farmer = {}
         farmer["signage_points"] = self.farmer_api.get_signage_points() # challenges
