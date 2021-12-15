@@ -41,6 +41,7 @@ class ApiHandler:
             'queryWalletData': self._wallet_data,
             'queryFarmData': self._farmer_data,
             'queryHarvesterData': self._harvester_data,
+            'get_chia_status': self._get_chia_status, 
             'queryWalletStatus': None,
             'queryFarmerStatus': None,
             'queryHarvesterStatus': None,
@@ -111,14 +112,10 @@ class ApiHandler:
                     return self.request_map[key]()
                 elif key == 'queryHarvesterData':
                     return self.request_map[key]()
-                elif key == "queryWalletStatus":
-                    return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "walletStatus", self.chiaInterpreter.get_wallet_status(True))
-                elif key == "queryFarmerStatus":
-                    return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "farmerStatus", self.chiaInterpreter.get_farmer_status(True))
-                elif key == "queryHarvesterStatus":
-                    return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Harvester\\Chia_Harvester_Api", "Chia_Harvester_Api", "harvesterStatus", self.chiaInterpreter.get_harvester_status(True))
+                elif key == "get_chia_status":
+                    return self.request_map[key]()
                 elif key == "restartFarmerService":
-                    return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "farmerServiceRestart", self.chiaInterpreter.restart_farmer())
+                    return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "Chia_Farm_Api", "farmerServiceRestart", self.farmer_api.restart())
                 elif key == "restartWalletService":
                     return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "Chia_Wallet_Api", "walletServiceRestart", self.chiaInterpreter.restart_wallet())
                 elif key == "restartHarvesterService":
@@ -146,6 +143,15 @@ class ApiHandler:
         else:
             log.info(f"Command {command} not valid.")
 
+    def _get_chia_status(self) -> dict:
+        data = {
+            'wallet': self.chiaInterpreter.get_wallet_status(True),
+            'farmer': self.chiaInterpreter.get_farmer_status(True),
+            'harvester': self.chiaInterpreter.get_harvester_status(True)
+        }
+
+        return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Nodes\\Nodes_Api", "Nodes_Api", "updateChiaStatus", data)
+    
     def _wallet_data(self) -> dict:
         log.info("Get wallet data..")
         data = {}
