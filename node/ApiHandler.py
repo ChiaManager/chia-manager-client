@@ -101,7 +101,7 @@ class ApiHandler:
                                                                self.chiaInterpreter.get_harvester_status(True))}
                     return command
                 elif key == "acceptNodeRequest":
-                    log.info(0, "Restarting node in background.")
+                    log.info("Restarting node in background.")
                     execpath = "{}../chia_mgmt_node.py".format(Path(os.path.realpath(__file__)))
                     sys.exit(0)
                 elif key == "querySystemInfo":
