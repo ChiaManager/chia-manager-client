@@ -256,7 +256,7 @@ Restart = on-failure
 SyslogIdentifier = chia-node-client
 
 [Install]
-WantedBy = user.target
+WantedBy = multi-user.target
 EOF
     
 
