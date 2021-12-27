@@ -139,7 +139,7 @@ class NodeWebsocket:
             self.socket.send( 
                 json.dumps(
                     NodeHelper.get_formated_info(
-                        NodeConfig().auth_hash or "", "ownRequest", "ChiaMgmt\\Nodes\\Nodes_Api", "Nodes_Api", "loginStatus", {}
+                        NodeConfig().auth_hash or "", "ownRequest", "ChiaMgmt\\Nodes\\Nodes_Api", "loginStatus", {}
                     )
                 )
             )
