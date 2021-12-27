@@ -20,7 +20,7 @@ class NodeHelper:
                 print("&quot;Please respond with 'yes' or 'no'\n&quot")
 
     @staticmethod
-    def get_formated_info(auth_hash: str, socket_action: str, namespace: str, classname: str, method: str,
+    def get_formated_info(auth_hash: str, socket_action: str, namespace: str, method: str,
                           data: Any) -> dict:
         return {
             "node": {
@@ -37,7 +37,6 @@ class NodeHelper:
                 'data': data,
                 'backendInfo': {
                     'namespace': namespace,
-                    'class': classname,
                     'method': method
                 }
             }
