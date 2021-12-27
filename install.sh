@@ -195,7 +195,6 @@ fi
 #
 echo -e "${INFTXT}Updating System using command '$updateCMD'."
 eval "$updateCMD" >/dev/null 2>&1
-echo -e "${SUCTXT}Done."
 updateCMDstatus=$?
 if [ $updateCMDstatus -eq 0 ]; then
     echo -e "${SUCTXT}Done."
