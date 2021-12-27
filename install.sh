@@ -21,6 +21,10 @@ CHIA_NODE_CLIENT_DIR=`dirname "$SCRIPT_PATH"`
 CURRENT_USER=`whoami`
 SYSTEMD_INSTALL_PATH="/etc/systemd/system/"
 
+MINPYTHON="370"
+MAXPYTHON="380"
+PYTHON_VERSIONS=("" "3" "3.7" "37" "370")
+
 declare -A updateCMD;
 updateCMD[/etc/redhat-release]="sudo dnf clean all && sudo dnf update -y"
 updateCMD[/etc/debian_version]="sudo apt-get update && sudo apt-get upgrade -y"
@@ -37,7 +41,7 @@ if [ $CURRENT_USER == "root" ];then
     exit 1
 fi
 
-echo "
+echo -e "$(tput setaf 2)
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWKKWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMNOk0NMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMN0xxxONMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
@@ -77,7 +81,19 @@ MMMMMMMMMMMMMMMMWNX0kxoooxOXWWWWWMMMMMMMMMMMMMNx:::::::cclloddoolllllloooooxKWMM
 MMMMMMMMMMMMMMMMMMMMMWX0kxoox0NMMMMMMMMMMMMMMMKl;;;::::::::cccccccllloxOkxdONMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMWX0kxxKWMMMMMMMMMMMMMN0dox00koc:::::ccccccldKWMWNNWMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMWNKOXWMMMMMMMMMMMMMMWWWMMMXo;;:oO00OdcclkNMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMNNWMMMMMMMMMMMMMMMMMMMMNxc:cOWMMWXxxOXWMMMMMMMMMM"
+MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMNNWMMMMMMMMMMMMMMMMMMMMNxc:cOWMMWXxxOXWMMMMMMMMMM$(tput sgr0)"
+echo -e "
+################################################################################
+#           Node client install script for Chia Manager                        #
+#                       BY lucaaust and OLED1                                  #
+#                                                                              #                            
+#           Project Sources:                                                   #
+#           Client: https://github.com/OLED1/chia-node-client                  #
+#           Server: https://github.com/OLED1/chia-web-gui                      #
+#                                                                              #
+#           Please submit feature requests and issues there if you have some.  #
+#           Thank you for using our project \xf0\x9f\x98\x80                                 #
+################################################################################"
 echo -e "${INFTXT}Starting installation procedure for the chia node client."
 echo -e "${ERRCOLOR}!!!!!! Please do not abort this installation. !!!!!! $NOCOLOR"
 sleep 5
@@ -105,37 +121,55 @@ fi
 #
 # Python version check
 #
-echo -e "${INFTXT}Checking Python version..."
-version=$(python3 -V 2>&1 | grep -Po '(?<=Python )(.+)')
-parsedVersion=$(echo "${version//./}")
+echo -e "${INFTXT}Checking for suitable Python version."
+pythonExecPath=""
+pythonVersion=0
+pipExecPath=""
+for version in "${PYTHON_VERSIONS[@]}";
+do
+    echo -e "${INFTXT}Checking if python$version executable can be found."
+    which_python=$( which python$version )
+    python_found=$?
 
-if [[ "$parsedVersion" -lt "380" && "$parsedVersion" -ge "370" ]]
-then 
-    echo -e "${SUCTXT}Valid Python version found! [$version]"
-else
-    echo -e "${WARTXT}The default python3 executable has a not supported version ($version). Python 3.7.x is required."
-    echo -e "${INFTXT}Checking if python3.7 executable can be found..."
-    command -v python3.7 >/dev/null 2>&1
-    python_exec_found=$?
-    if [ $python_exec_found == 0 ];then
-        which_python=$( which python3.7 )
-        version=$($which_python -V 2>&1 | grep -Po '(?<=Python )(.+)')
-        parsedVersion=$(echo "${version//./}")
+    if [ $python_found == 0 ];then
+        found_python_version=$(python$version -V 2>&1 | grep -Po '(?<=Python )(.+)')
+        parsed_python_version=$(echo "${found_python_version//./}")
+        echo -e "${SUCTXT}python$version executable existing."
+        echo -e "${INFTXT}Checking version."
 
-        if [[ "$parsedVersion" -lt "380" && "$parsedVersion" -ge "370" ]];then
-            echo -e "${SUCTXT}Found python 3.7 installation at ${which_python} (Version $version)."
+        if [[ "$parsed_python_version" -lt $MAXPYTHON && "$parsed_python_version" -ge $MINPYTHON ]];then
+            echo -e "${SUCTXT}python$version satisfies required version 3.7. Detected $found_python_version at $which_python."
+            echo -e "${INFTXT}Checking if pip$version can be found."
+            which_pip=$( which pip$version )
+            pip_found=$?
+
+            if [ $pip_found == 0 ];then            
+                pythonExecPath=$which_python
+                pipExecPath=$which_pip
+                pythonVersion=$($which_python -V 2>&1 | grep -Po '(?<=Python )(.+)')
+                echo -e "${SUCTXT}Associated pip$version found."
+                break
+            else
+                echo -e "${WARTXT}pip$version seems not to be installed."
+            fi
         else
-            echo -e "${ERRTXT}Did not find any supported python version on this system. Skipping installation."
-            exit 1
+            echo -e "${WARTXT}python$version does not satisfy required version 3.7. Detected $found_python_version." 
         fi
+    else
+      echo -e "${WARTXT}python$version not existing..."  
     fi
+done
+
+if [ $pythonVersion == 0 ];then
+    echo -e "${ERRTXT}Did not detect any supported python version on this system. Skipping installation. Python 3.7.x is required."
+    exit 1
 fi
 
 #
 # Install pipenv package
 #
 echo -e "${INFTXT}Install pipenv package..."
-pip install pipenv >/dev/null 2>&1
+$pipExecPath install pipenv >/dev/null 2>&1
 pip_exec_status=$?
 if [ $pip_exec_status == 0 ];then
     echo -e "${SUCTXT}Done."
@@ -152,7 +186,7 @@ pipenv --version >/dev/null 2>&1
 if [ $? -eq 0 ]; then
     echo -e "${SUCTXT}Found Python pipenv package."
 else
-    echo -e "${ERRTXT}Could not found Python pipenv package! Please install with 'pip install pipenv' and start install.sh again."
+    echo -e "${ERRTXT}Could not found Python pipenv package! Please install with '$pipExecPath install pipenv' and start install.sh again."
     exit 1
 fi
 
@@ -161,6 +195,7 @@ fi
 #
 echo -e "${INFTXT}Updating System using command '$updateCMD'."
 eval "$updateCMD" >/dev/null 2>&1
+echo -e "${SUCTXT}Done."
 updateCMDstatus=$?
 if [ $updateCMDstatus -eq 0 ]; then
     echo -e "${SUCTXT}Done."
@@ -175,7 +210,7 @@ fi
 echo "${INFTXT}Install newest pipenv for chia-node-client..."
 pipenv install --python 3.7 >/dev/null 2>&1
 pipenvInstallStatus=$?
-if [ $pipenvInstallStatus -eq 0 ]; then
+if [ $pipenvInstallStatus == 0 ]; then
     echo -e "${SUCTXT}Done."
 else
     echo -e "${ERRTXT}The installation procedure failed. Please try again. Aborting..."
