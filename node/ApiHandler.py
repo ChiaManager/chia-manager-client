@@ -46,7 +46,7 @@ class ApiHandler:
             'queryWalletStatus': None,
             'queryFarmerStatus': None,
             'queryHarvesterStatus': None,
-            'restartFarmerService': None,
+            'restartFarmerService': self._restart_farmer_service,
             'restartWalletService': None,
             'restartHarvesterService': None
         }
@@ -82,7 +82,7 @@ class ApiHandler:
                 elif key == "get_chia_status":
                     return self.request_map[key]()
                 elif key == "restartFarmerService":
-                    return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "farmerServiceRestart", self.farmer_api.restart())
+                    return self.request_map[key]()
                 elif key == "restartWalletService":
                     return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "walletServiceRestart", self.chiaInterpreter.restart_wallet())
                 elif key == "restartHarvesterService":
@@ -216,5 +216,8 @@ class ApiHandler:
         data["chia"] = self.chiaInterpreter.get_chia_paths()
         
         return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Nodes\\Nodes_Api", "updateScriptVersion", data)
-        
+
+    def _restart_farmer_service(self):
+        print(self.chiaInterpreter.restart_farmer_service())
+        #return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "farmerServiceRestart", self.farmer_api.restart())   
 

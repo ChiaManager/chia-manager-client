@@ -25,6 +25,7 @@ class NodeConfig(ConfigParser):
         self.__port = None
         self.__socket_dir = None
         self.auth_hash = None
+        self.chia_blockchain_path = None
         self.logging = {}
         self.key_convert_map = {
             'server': str,
@@ -56,6 +57,9 @@ class NodeConfig(ConfigParser):
         
         if self.has_option('Node', 'authhash'):
             self.auth_hash = format(self["Node"]["authhash"])
+
+        if self.has_option('Chia','chia_blockchain_path'):
+            self.chia_blockchain_path = format(self["Chia"]["chia_blockchain_path"])
         
         # log config
         self.logging = self['Logging']

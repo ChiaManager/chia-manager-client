@@ -247,35 +247,47 @@ class ChiaHandler:
             return {"status": 1, "message": "Harvester service not running."}
         return False
 
-    def restart_farmer(self) -> dict:
-        if self._restart_service('farmer'):
+    def restart_farmer_service(self) -> dict:
+        if self._restart_service('farmer-only'):
             return self.get_farmer_status(as_dict=True)
 
         return {}
 
-    def restart_wallet(self):
-        if self._restart_service('wallet'):
+    def restart_wallet_service(self):
+        if self._restart_service('wallet-only'):
             return self.get_wallet_status(as_dict=True)
 
         return {}
 
-    def restart_harvester(self) -> dict:
-        if self._restart_service('harvester'):
+    def restart_harvester_service(self) -> dict:
+        if self._restart_service('harvester-only'):
             return self.get_harvester_status(as_dict=True)
 
         return {}
 
     def _restart_service(self, service_name) -> bool:
         log.info(f"Restarting {service_name} service.")
+        venv_path = f"{self.chia_path}/venv/bin"
+        os.environ["PATH"] = venv_path
 
-        stdout, stderr = self.run_chia_command(f"start {service_name} -r")
+        #/usr/bin/env PATH={venv_path}:$PATH chia version
+        #stdout, stderr = self.run_chia_command(f"/usr/bin/env PATH={venv_path}:{os.environ['PATH']} chia version")
+        result = subprocess.run(
+            f"/usr/bin/env PATH={venv_path}:{os.environ['PATH']} chia start {service_name} -r", 
+            shell=True,
+            capture_output=True
+        )
 
-        if not stderr:
-            log.info(f"Restarting {service_name} service. Done!")
-            return True
+        print(result.stdout)
 
-        log.error(f"Failed to restart {service_name}. Error: {stderr}")
-        return False
+        #log.info(stdout)
+
+        #if not stderr:
+        #    log.info(f"Restarting {service_name} service. Done!")
+        #    return True
+
+        #log.error(f"Failed to restart {service_name}. Error: {stderr}")
+        #return False
 
     def run_chia_command(self, command: str) -> tuple:
         return subprocess.Popen(
