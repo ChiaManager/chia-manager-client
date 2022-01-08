@@ -31,22 +31,23 @@ class ApiHandler:
         self.farmer_api = ChiaFarmerApi()
 
         self.request_map = {
-            'loginStatus': None,
+            'loginStatus': self._login_status,
             'queryCronData': None,
             'nodeUpdateStatus': None,
             'acceptNodeRequest': None,
-            'querySystemInfo': None,
+            'querySystemInfo': self._get_system_info,
             'queryWalletData': self._wallet_data,
             'queryFarmData': self._farmer_data,
             'queryHarvesterData': self._harvester_data,
             'get_chia_status': self._get_chia_status,
             'get_script_version' : self._get_script_version, 
-            'queryWalletStatus': None,
+            'queryWalletStatus': self._get_chia_status,
             'queryFarmerStatus': None,
             'queryHarvesterStatus': None,
+            'queryWalletTransactions': self._get_wallet_transactions,
             'restartFarmerService': self._restart_farmer_service,
-            'restartWalletService': None,
-            'restartHarvesterService': None
+            'restartWalletService': self._restart_wallet_service,
+            'restartHarvesterService': self._restart_harvester_service,
         }
 
     def interpretCommand(self, command):
@@ -59,54 +60,21 @@ class ApiHandler:
             log.debug(f"Got message from API on command {key}: {command[key]['message']}")
 
             if command[key]["status"] == 0:
-                auth_hash = self.node_config.auth_hash
-                if key == "loginStatus":
-                    log.info("This node is logged in. Nodeinformation: Node hostname: {} Registered as: {}".format(command[key]["data"]["hostname"], command[key]["data"]["nodetype"]))
-                    data = {
-                        'scriptversion': self.node_config.get_script_info(),
-                        'chia': self.chiaInterpreter.get_chia_paths()
-                    }
-                    return NodeHelper().get_formated_info(auth_hash, "ownRequest", "ChiaMgmt\\Nodes\\Nodes_Api", "updateScriptVersion", data)
-                elif key == "get_script_version":
-                    return self.request_map[key]()
-                elif key == "querySystemInfo":
-                    return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Infra_Sysinfo\\Chia_Infra_Sysinfo_Api", "updateSystemInfo", self.systemInfoInterpreter.get_system_info())
-                elif key == "queryWalletData":
-                    return self.request_map[key]()
-                elif key == "queryFarmData":
-                    return self.request_map[key]()
-                elif key == 'queryHarvesterData':
-                    return self.request_map[key]()
-                elif key == "get_chia_status":
-                    return self.request_map[key]()
-                elif key == "restartFarmerService":
-                    return self.request_map[key]()
-                elif key == "restartWalletService":
-                    return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "walletServiceRestart", self.chiaInterpreter.restart_wallet())
-                elif key == "restartHarvesterService":
-                    return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Harvester\\Chia_Harvester_Api", "harvesterServiceRestart", self.chiaInterpreter.restart_harvester())
-                elif key == "queryWalletTransactions":
-                    log.debug("queryWalletTransactions")
-                    
-                    wallets = self.chia_wallet_api.get_wallets().get('wallets', None)
-
-                    if wallets is None:
-                        log.debug(f"No Wallets found!")
-                        return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "updateWalletTransactions", [])
-
-                    transactions = {}
-                    for wallet in wallets:
-                        transactions[wallet['id']] = self.chia_wallet_api.get_transactions(wallet['id'])
-
-                    log.debug(f"transactions: {transactions}")
-                    return NodeHelper().get_formated_info(auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "updateWalletTransactions", transactions)
-
-
+                return self.request_map[key]()
             else:
                 log.info(command[key]['message'])
-
         else:
             log.info(f"Command {command} not valid.")
+
+    def _get_system_info(self):
+        return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Infra_Sysinfo\\Chia_Infra_Sysinfo_Api", "updateSystemInfo", self.systemInfoInterpreter.get_system_info())
+
+    def _login_status(self):
+        data = {
+            'scriptversion': self.node_config.get_script_info(),
+            'chia': self.chiaInterpreter.get_chia_paths()
+        }
+        return NodeHelper().get_formated_info(self.node_config.auth_hash, "ownRequest", "ChiaMgmt\\Nodes\\Nodes_Api", "updateScriptVersion", data)
 
     def _get_chia_status(self) -> dict:
         data = {
@@ -138,6 +106,22 @@ class ApiHandler:
             log.info("Get wallet data.. Done!")
             
             return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "updateWalletData", data)
+
+    def _get_wallet_transactions(self):
+            log.debug("queryWalletTransactions")
+            
+            wallets = self.chia_wallet_api.get_wallets().get('wallets', None)
+
+            if wallets is None:
+                log.debug(f"No Wallets found!")
+                return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "updateWalletTransactions", [])
+
+            transactions = {}
+            for wallet in wallets:
+                transactions[wallet['id']] = self.chia_wallet_api.get_transactions(wallet['id'])
+
+            log.debug(f"transactions: {transactions}")
+            return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "updateWalletTransactions", transactions)
 
     def _farmer_data(self) -> dict:
         if self.chiaInterpreter.get_farmer_status():
@@ -216,6 +200,10 @@ class ApiHandler:
         return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Nodes\\Nodes_Api", "updateScriptVersion", data)
 
     def _restart_farmer_service(self):
-        print(self.chiaInterpreter.restart_farmer_service())
-        #return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "farmerServiceRestart", self.farmer_api.restart())   
+        return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "farmerServiceRestart", self.farmer_api.start(restart=True))   
 
+    def _restart_wallet_service(self):
+        return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "walletServiceRestart", self.chia_wallet_api.start(restart=True))
+
+    def _restart_harvester_service(self):
+        return NodeHelper().get_formated_info(self.node_config.auth_hash, "backendRequest", "ChiaMgmt\\Chia_Harvester\\Chia_Harvester_Api", "harvesterServiceRestart", self.harvester_api.start(restart=True))
