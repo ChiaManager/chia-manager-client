@@ -1,18 +1,15 @@
-import logging
-import json
-from typing import Union
-from pprint import pprint
-from pathlib import Path
-
-from chia_api.ChiaApi import ChiaApi, log
-
-import requests
+from chia_api.ChiaApi import ChiaApi
+from chia_api.ChiaDaemon import ChiaDaemon
+from chia_api.constants import ServicesForGroup
 
 
 class ChiaFarmerApi(ChiaApi):
     def __init__(self):
         super(ChiaFarmerApi, self).__init__()
         self.port = 8559
+    
+    def start(self, restart: bool = False):
+        return ChiaDaemon().start_service(service=ServicesForGroup.FARMER_ONLY, restart=restart)
                 
     def get_wallets(self):
         return self._send_request('get_wallets')
