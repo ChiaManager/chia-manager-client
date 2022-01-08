@@ -3,7 +3,7 @@ import requests
 import urllib3
 import json
 import traceback
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, ReadTimeout
 
 from typing import Union
 
@@ -28,16 +28,21 @@ class ChiaApi:
             raise Exception("Port is missing. Please specify a Port.")
             
         url = f"https://localhost:{self.port}/{url_path}"
+        log.debug(f"Send request to : {url}")
         try:
             response = requests.post(
                 url, 
                 json=data or {},
                 headers={'content-type': 'application/json'}, 
                 cert=self.cert, 
-                verify=False
+                verify=False,
+                timeout=15,
             ) 
-        except ConnectionError:
+        except (ConnectionError, ReadTimeout):
             log.info(f"Could not connect to {url}")
+            return {}
+        except Exception:
+            print(traceback.format_exc())
             return {}
 
         try:
