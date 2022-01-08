@@ -247,24 +247,6 @@ class ChiaHandler:
             return {"status": 1, "message": "Harvester service not running."}
         return False
 
-    def restart_farmer_service(self) -> dict:
-        if self._restart_service('farmer-only'):
-            return self.get_farmer_status(as_dict=True)
-
-        return {}
-
-    def restart_wallet_service(self):
-        if self._restart_service('wallet-only'):
-            return self.get_wallet_status(as_dict=True)
-
-        return {}
-
-    def restart_harvester_service(self) -> dict:
-        if self._restart_service('harvester-only'):
-            return self.get_harvester_status(as_dict=True)
-
-        return {}
-
     def _restart_service(self, service_name) -> bool:
         log.info(f"Restarting {service_name} service.")
         venv_path = f"{self.chia_path}/venv/bin"
