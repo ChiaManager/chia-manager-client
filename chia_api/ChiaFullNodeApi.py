@@ -1,10 +1,11 @@
-from chia_api.ChiaApi import ChiaApi, log
+from chia_api.ChiaApi import ChiaApi
+
 
 class ChiaFullNodeApi(ChiaApi):
     def __init__(self):
         super(ChiaFullNodeApi, self).__init__()
         self.port = 8555
-
+            
     def get_plots(self):
         return self._send_request('get_plots')
 
