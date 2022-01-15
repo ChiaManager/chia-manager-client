@@ -60,7 +60,6 @@ class ChiaHandler:
         if not (self.chia_paths_exist and self.get_wallet_status()):
             return data
 
-        return data
         log.debug(f"self.format_chia_command('chia wallet show'): {self.format_chia_command('chia wallet show')}")
         try:
             wallet_infos, stderr = subprocess.Popen(
@@ -211,9 +210,13 @@ class ChiaHandler:
 
     def get_farmer_status(self, as_dict: bool = False) -> Union[dict, bool]:
         log.info("Checking if farmer service is running.")
-        service_result = subprocess.run(
-            f"ps -aux | grep chia_farmer | grep -v 'grep'", shell=True
-        )
+        try:
+            service_result = subprocess.run(
+                f"ps -aux | grep chia_farmer | grep -v 'grep'", shell=True
+            )
+        except Exception:
+            print(traceback.format_exc())
+            return False
 
         if service_result.returncode == 0:
             log.info("Farmer service running.")

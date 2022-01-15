@@ -1,5 +1,6 @@
 import sys
 import os
+import socket
 import logging
 from typing import Union, Any
 from pathlib import Path
@@ -21,6 +22,7 @@ class NodeConfig(ConfigParser):
         self.config_dir = Path(root_path).parent.joinpath('config')
         self.chia_config_file = self.config_dir.joinpath('node.ini')
 
+        self.hostname = socket.gethostname()
         self.__server = None
         self.__port = None
         self.__socket_dir = None
