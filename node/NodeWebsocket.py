@@ -194,10 +194,10 @@ class NodeWebsocket:
         # 010005002 = This node is waiting for authentication
         # 010005006 = got a auth hash
         # 010005013 = node exists but auth hash is not in node.ini
-        if login_status_code in ["010005006", "010005013"] and not self.node_config.auth_hash:
+        if login_status_code in ["010005006", "010005013"]:
             log.info("Got new auth hash! Write to config.")
-            self.node_config.update_config("node", "authhash", login_result['loginStatus']['data']['newauthhash'])    
-
+            self.node_config.update_config("node", "authhash", login_result['loginStatus']['data']['newauthhash'])
+            
         elif login_status_code == 0:
             return True, login_result
         
