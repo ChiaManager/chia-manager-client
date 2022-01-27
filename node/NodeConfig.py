@@ -113,7 +113,7 @@ class NodeConfig(ConfigParser):
 
         log.debug("Write new config.. Done!")
         log.debug("Reload config..")
-        self.read(self.chia_config_file)
+        self.load_config()
         log.debug("Reload config.. Done!")
 
     def _check_log_and_config_path(self):
