@@ -162,6 +162,7 @@ class NodeWebsocket:
             Tuple[bool, dict]: Login status and message from server.
         """
 
+        log.debug(f"Using auth_hash: {NodeConfig().auth_hash}")
         login_result = {}
         data = json.dumps(
             {
@@ -194,10 +195,16 @@ class NodeWebsocket:
         # 010005002 = This node is waiting for authentication
         # 010005006 = got a auth hash
         # 010005013 = node exists but auth hash is not in node.ini
-        if login_status_code in ["010005006", "010005013"]:
+        auth_hash = login_result['loginStatus']['data'].get('authhash')
+        if login_status_code in ["010005006", "010005013"] or auth_hash is not None and self.node_config.auth_hash != login_result['loginStatus']['data']['authhash']:
             log.info("Got new auth hash! Write to config.")
-            self.node_config.update_config("node", "authhash", login_result['loginStatus']['data']['newauthhash'])
-            
+            try:
+                self.node_config.update_config("node", "authhash", login_result['loginStatus']['data']['authhash'])
+            except Exception:
+                log.error(traceback.format_exc())
+            log.debug(f"New auth_hash: {self.node_config.auth_hash}")
+
+
         elif login_status_code == 0:
             return True, login_result
         
