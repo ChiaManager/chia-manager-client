@@ -255,10 +255,18 @@ class ApiHandler:
         )
 
     def _restart_farmer_service(self):
-        return self._formated_info("ChiaMgmt\\Chia_Farm\\Chia_Farm_Api", "farmerServiceRestart", self.farmer_api.start(restart=True))   
+        return self._formated_info(
+            namespace="ChiaMgmt\\Chia_Farm\\Chia_Farm_Api",
+            method="farmerServiceRestart",
+            data=self.farmer_api.start(restart=True)
+        )   
 
     def _restart_wallet_service(self):
-        return self._formated_info("ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api", "walletServiceRestart", self.chia_wallet_api.start(restart=True))
+        return self._formated_info(
+            namespace="ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api",
+            method="walletServiceRestart", 
+            data=self.chia_wallet_api.start(restart=True)
+        )
 
     def _restart_harvester_service(self):
         return self._formated_info(
