@@ -21,9 +21,10 @@ CHIA_NODE_CLIENT_DIR=`dirname "$SCRIPT_PATH"`
 CURRENT_USER=`whoami`
 SYSTEMD_INSTALL_PATH="/etc/systemd/system/"
 
-MINPYTHON="370"
-MAXPYTHON="380"
-PYTHON_VERSIONS=("" "3" "3.7" "37" "370")
+REQUIRED_PYTHON_VERSION = "3.9"
+MINPYTHON="390"
+MAXPYTHON="31200"
+PYTHON_VERSIONS=("" "3" "3.9" "39" "390")
 
 declare -A updateCMD;
 updateCMD[/etc/redhat-release]="sudo dnf clean all && sudo dnf update -y"
@@ -125,6 +126,7 @@ echo -e "${INFTXT}Checking for suitable Python version."
 pythonExecPath=""
 pythonVersion=0
 pipExecPath=""
+# TODO: remove loop, 'python' is only for python2
 for version in "${PYTHON_VERSIONS[@]}";
 do
     echo -e "${INFTXT}Checking if python$version executable can be found."
@@ -138,7 +140,7 @@ do
         echo -e "${INFTXT}Checking version."
 
         if [[ "$parsed_python_version" -lt $MAXPYTHON && "$parsed_python_version" -ge $MINPYTHON ]];then
-            echo -e "${SUCTXT}python$version satisfies required version 3.7. Detected $found_python_version at $which_python."
+            echo -e "${SUCTXT}python $version satisfies required version $REQUIRED_PYTHON_VERSION. Detected $found_python_version at $which_python."
             echo -e "${INFTXT}Checking if pip$version can be found."
             which_pip=$( which pip$version )
             pip_found=$?
@@ -153,7 +155,7 @@ do
                 echo -e "${WARTXT}pip$version seems not to be installed."
             fi
         else
-            echo -e "${WARTXT}python$version does not satisfy required version 3.7. Detected $found_python_version." 
+            echo -e "${WARTXT}Python $version does not satisfy required version $REQUIRED_PYTHON_VERSION. Detected $found_python_version." 
         fi
     else
       echo -e "${WARTXT}python$version not existing..."  
@@ -161,6 +163,7 @@ do
 done
 
 if [ $pythonVersion == 0 ];then
+    echo -e "${ERRTXT}Did not detect any supported python version on this system. Skipping installation. Python $REQUIRED_PYTHON_VERSION.x is required."
     return 1
 fi
 
