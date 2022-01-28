@@ -16,7 +16,7 @@ SUCTXT=$(tput setaf 2)[SUC]$(tput sgr0)
 ERRTXT=$(tput setaf 1)[ERR]$(tput sgr0)
 WARTXT=$(tput setaf 3)[WAR]$(tput sgr0)
 
-SCRIPT_PATH=`realpath "$0"`
+SCRIPT_PATH=`realpath "${BASH_SOURCE[0]}"`
 CHIA_NODE_CLIENT_DIR=`dirname "$SCRIPT_PATH"`
 CURRENT_USER=`whoami`
 SYSTEMD_INSTALL_PATH="/etc/systemd/system/"
