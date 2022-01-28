@@ -38,7 +38,7 @@ updateCMD[/etc/debian_version]="sudo apt-get update && sudo apt-get upgrade -y"
 
 if [ $CURRENT_USER == "root" ];then
     echo -e "${WARTXT}Please do not install this script as root. Aborting."
-    exit 1
+    return 1
 fi
 
 echo -e "$(tput setaf 2)
@@ -115,7 +115,7 @@ done
 
 if ! ($found);then
     echo -e "${ERRTXT}Currently only RedHat (Fedora/Centos/RHEL) or Debian (Debian/Ubuntu/...) based distribtions are supported."
-    exit 1
+    return 1
 fi
 
 #
@@ -161,8 +161,7 @@ do
 done
 
 if [ $pythonVersion == 0 ];then
-    echo -e "${ERRTXT}Did not detect any supported python version on this system. Skipping installation. Python 3.7.x is required."
-    exit 1
+    return 1
 fi
 
 #
@@ -175,7 +174,7 @@ if [ $pip_exec_status == 0 ];then
     echo -e "${SUCTXT}Done."
 else
     echo -e "${ERRTXT}Could not install pipenv. Aborting..."
-    exit 1
+    return 1
 fi
 
 #
@@ -187,7 +186,7 @@ if [ $? -eq 0 ]; then
     echo -e "${SUCTXT}Found Python pipenv package."
 else
     echo -e "${ERRTXT}Could not found Python pipenv package! Please install with '$pipExecPath install pipenv' and start install.sh again."
-    exit 1
+    return 1
 fi
 
 #
@@ -200,7 +199,7 @@ if [ $updateCMDstatus -eq 0 ]; then
     echo -e "${SUCTXT}Done."
 else
     echo -e "${ERRTXT}The installation procedure failed. Please try again. Aborting..."
-    exit 1
+    return 1
 fi
 
 #
@@ -213,7 +212,7 @@ if [ $pipenvInstallStatus == 0 ]; then
     echo -e "${SUCTXT}Done."
 else
     echo -e "${ERRTXT}The installation procedure failed. Please try again. Aborting..."
-    exit 1
+    return 1
 fi
 
 #
