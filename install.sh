@@ -209,7 +209,7 @@ fi
 # Installing pipenv
 #
 echo "${INFTXT}Install newest pipenv for chia-node-client..."
-pipenv install --python 3.7 >/dev/null 2>&1
+pipenv install >/dev/null 2>&1
 pipenvInstallStatus=$?
 if [ $pipenvInstallStatus == 0 ]; then
     echo -e "${SUCTXT}Done."
