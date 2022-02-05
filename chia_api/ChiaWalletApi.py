@@ -17,6 +17,7 @@ class ChiaWalletApi(ChiaApi):
         super(ChiaWalletApi, self).__init__()
         # TODO: read ports from ~/.chia/mainnet/config/config.yaml
         self.port = 9256
+        self.service_name = "chia_wallet"
     
     def start(self, restart: bool = False):
         return ChiaDaemon().start_service(service=ServicesForGroup.WALLET_ONLY, restart=restart)    

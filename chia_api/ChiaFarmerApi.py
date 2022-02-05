@@ -7,6 +7,7 @@ class ChiaFarmerApi(ChiaApi):
     def __init__(self):
         super(ChiaFarmerApi, self).__init__()
         self.port = 8559
+        self.service_name = "chia_farmer"
     
     def start(self, restart: bool = False):
         return ChiaDaemon().start_service(service=ServicesForGroup.FARMER_ONLY, restart=restart)

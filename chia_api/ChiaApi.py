@@ -3,11 +3,11 @@ import requests
 import urllib3
 import json
 import traceback
+from pathlib import Path
+
 from requests.exceptions import ConnectionError, ReadTimeout
 
-from typing import Union
-
-from pathlib import Path
+import psutil
 
 
 log = logging.getLogger()
@@ -22,7 +22,8 @@ class ChiaApi:
             )
         
         self.port = None
-    
+        self.service_name = None
+
     def _send_request(self, url_path: str, data: dict = None) -> str:
         if self.port is None:
             raise Exception("Port is missing. Please specify a Port.")
@@ -58,3 +59,9 @@ class ChiaApi:
             result = {}
 
         return result
+
+    def get_status(self, service_name: str) -> bool:
+        if self.service_name is None:
+            return False
+
+        return self.service_name in [p.name() for p in psutil.process_iter()]

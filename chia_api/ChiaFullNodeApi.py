@@ -5,6 +5,7 @@ class ChiaFullNodeApi(ChiaApi):
     def __init__(self):
         super(ChiaFullNodeApi, self).__init__()
         self.port = 8555
+        self.service_name = "chia_full_node"
             
     def get_plots(self):
         return self._send_request('get_plots')

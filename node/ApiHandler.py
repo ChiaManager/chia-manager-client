@@ -109,9 +109,9 @@ class ApiHandler:
             namespace="ChiaMgmt\\Nodes\\Nodes_Api",
             method="updateChiaStatus", 
             data={
-                'wallet': self.chia_handler.get_wallet_status(True),
-                'farmer': self.chia_handler.get_farmer_status(True),
-                'harvester': self.chia_handler.get_harvester_status(True),
+                'wallet': self.chia_wallet_api.get_status(),
+                'farmer': self.farmer_api.get_status(),
+                'harvester': self.harvester_api.get_status(),
             }
         )
     
@@ -119,7 +119,7 @@ class ApiHandler:
         log.info("Get wallet data..")
         data = {}
 
-        if self.chia_handler.get_wallet_status():
+        if self.chia_wallet_api.get_status():
             # get wallet specific data from each wallet
             for wallet in self.chia_wallet_api.get_wallets().get('wallets', []):
                 wallet_id = wallet['id']
@@ -167,7 +167,7 @@ class ApiHandler:
             )
 
     def _farmer_data(self) -> dict:
-        if self.chia_handler.get_farmer_status():
+        if self.farmer_api.get_status():
             farmed_amount = {}
         
             for wallet in self.chia_wallet_api.get_wallets().get('wallets', []):
@@ -226,7 +226,7 @@ class ApiHandler:
             )
 
     def _harvester_data(self) -> dict:
-        if self.chia_handler.get_harvester_status():
+        if self.harvester_api.get_status():
             plot_directories = self.harvester_api.get_plot_directories()
             plots = self.harvester_api.get_plots()
 
