@@ -1,7 +1,7 @@
 #!/bin/bash
 #############################################################
 #                                                           #
-# Chia Web Node client installer by @lucaaust and @OLED1.   #
+# Chia-Manager client installer by @lucaaust and @OLED1.   #
 # Version: 0.1.0                                            #
 #                                                           #
 #############################################################
@@ -17,7 +17,7 @@ ERRTXT=$(tput setaf 1)[ERR]$(tput sgr0)
 WARTXT=$(tput setaf 3)[WAR]$(tput sgr0)
 
 SCRIPT_PATH=`realpath "${BASH_SOURCE[0]}"`
-CHIA_NODE_CLIENT_DIR=`dirname "$SCRIPT_PATH"`
+CHIA_MANAGER_CLIENT_DIR=`dirname "$SCRIPT_PATH"`
 CURRENT_USER=`whoami`
 SYSTEMD_INSTALL_PATH="/etc/systemd/system/"
 
@@ -85,18 +85,17 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMWNKOXWMMMMMMMMMMMMMMWWWMMMXo;;:oO00OdcclkNMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMNNWMMMMMMMMMMMMMMMMMMMMNxc:cOWMMWXxxOXWMMMMMMMMMM$(tput sgr0)"
 echo -e "
 ################################################################################
-#           Node client install script for Chia Manager                        #
+#           Chia-Manager install script for Chia Manager                       #
 #                       BY lucaaust and OLED1                                  #
 #                                                                              #                            
 #           Project Sources:                                                   #
-#           Client: https://github.com/OLED1/chia-node-client                  #
-#           Server: https://github.com/OLED1/chia-web-gui                      #
+#           Client: https://github.com/OLED1/chia-manager-client               #
+#           Server: https://github.com/OLED1/chia-manager                      #
 #                                                                              #
 #           Please submit feature requests and issues there if you have some.  #
 #           Thank you for using our project \xf0\x9f\x98\x80                                 #
 ################################################################################"
-echo -e "${INFTXT}Starting installation procedure for the chia node client."
-echo -e "${ERRCOLOR}!!!!!! Please do not abort this installation. !!!!!! $NOCOLOR"
+echo -e "${INFTXT}Starting installation procedure for the Chia-Manager client."
 sleep 5
 echo -e "${INFTXT}Checking if system is supported..."
 
@@ -170,7 +169,7 @@ fi
 #
 # Install pipenv package
 #
-echo -e "${INFTXT}Install pipenv package..."
+echo -e "${INFTXT}Install pipenv packages..."
 $pipExecPath install pipenv >/dev/null 2>&1
 pip_exec_status=$?
 if [ $pip_exec_status == 0 ];then
@@ -183,7 +182,7 @@ fi
 #
 # Recheck install of pipenv package
 #
-echo -e "${INFTXT}Double-check pipenv installation for chia node client..."
+echo -e "${INFTXT}Double-check pipenv installation for chia-manager-client..."
 pipenv --version >/dev/null 2>&1
 if [ $? -eq 0 ]; then
     echo -e "${SUCTXT}Found Python pipenv package."
@@ -196,6 +195,7 @@ fi
 # Update system packages
 #
 echo -e "${INFTXT}Updating System using command '$updateCMD'."
+echo -e "${ERRCOLOR}!!! Do not abort this step. Your system might break. !!! $NOCOLOR"
 eval "$updateCMD" >/dev/null 2>&1
 updateCMDstatus=$?
 if [ $updateCMDstatus -eq 0 ]; then
@@ -208,7 +208,7 @@ fi
 #
 # Installing pipenv
 #
-echo "${INFTXT}Install newest pipenv for chia-node-client..."
+echo "${INFTXT}Install newest pipenv for chia-manager-client..."
 pipenv install >/dev/null 2>&1
 pipenvInstallStatus=$?
 if [ $pipenvInstallStatus == 0 ]; then
@@ -221,8 +221,8 @@ fi
 #
 # Create config if not exists
 #
-echo "${INFTXT}Creating new chia node config if not alread existing..."
-if test -f "$CHIA_NODE_CLIENT_DIR/config/node.ini"; then
+echo "${INFTXT}Creating new client config if not alread existing..."
+if test -f "$CHIA_MANAGER_CLIENT_DIR/config/node.ini"; then
     echo -e "${INFTXT}Found existing config. Skipping..."
 else
     # Get server settings to write config
@@ -256,7 +256,7 @@ chia_blockchain_path = $chia_blockchain_path
 [Logging]
 log_level = ERROR
 log_backup_count = 3
-log_path = $CHIA_NODE_CLIENT_DIR
+log_path = $CHIA_MANAGER_CLIENT_DIR
 EOF
 fi
 
@@ -272,24 +272,24 @@ fi
 #
 # Install script as service
 #
-read -p "${INFTXT}Install Chia Node Client as Service? [Y/N]" -n 1 -r
+read -p "${INFTXT}Install Chia-Manager Client as Service? [Y/N]" -n 1 -r
 echo    # (optional) move to a new line
 if [[ $REPLY =~ ^[Yy]$ ]];
 then        
     echo -e "${INFTXT}Install as Service.."
-    service_name='chia-node-client.service'
+    service_name='chia-manager-client.service'
     sudo cat > $service_name << EOF
 [Unit]
-Description = Chia Node Client Service
+Description = Chia-Manager client service
 After = network.target
 
 [Service]
 Type = simple
-WorkingDirectory = $CHIA_NODE_CLIENT_DIR
-ExecStart = $(pipenv --venv)/bin/python run_node_client.py
+WorkingDirectory = $CHIA_MANAGER_CLIENT_DIR
+ExecStart = $(pipenv --venv)/bin/python run_client.py
 User = $(whoami)
 Restart = on-failure
-SyslogIdentifier = chia-node-client
+SyslogIdentifier = chia-manager-client
 
 [Install]
 WantedBy = multi-user.target
@@ -319,5 +319,5 @@ EOF
 
 fi
 
-echo -ne "${INFTXT}Thank you $CURRENT_USER for using our chia-node-client \xf0\x9f\x98\x80 \n"
+echo -ne "${INFTXT}Thank you $CURRENT_USER for using our Chia-Manager client \xf0\x9f\x98\x80 \n"
 echo -e "${INFTXT}Have a nice day! Bye..."
