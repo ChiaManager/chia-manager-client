@@ -196,21 +196,22 @@ class ApiHandler:
             average_block_time = (24 * 3600) / 4608 # SECONDS_PER_BLOCK
             blocks_to_compare = 500
 
-            try:
-                curr_block = blockchain_state["peak"]
-                if curr_block is not None and curr_block['height'] > 0 and not curr_block.get('timestamp') is not None:
-                    curr_block = self.full_node_api.get_block_record(curr_block['prev_hash'])
+            if blockchain_state.get("peak"):
+                try:
+                    curr_block = blockchain_state["peak"]
+                    if curr_block is not None and curr_block['height'] > 0 and not curr_block.get('timestamp') is not None:
+                        curr_block = self.full_node_api.get_block_record(curr_block['prev_hash'])
 
-                if curr_block is not None:
-                    # get the block from the past for calculation (curr block - 500)
-                    past_block = self.full_node_api.get_block_record_by_height(curr_block['height'] - blocks_to_compare)
-                    if past_block is not None and past_block['height'] > 0 and not past_block.get('timestamp') is not None:
-                        past_block = self.full_node_api.get_block_record(past_block['prev_hash'])
+                    if curr_block is not None:
+                        # get the block from the past for calculation (curr block - 500)
+                        past_block = self.full_node_api.get_block_record_by_height(curr_block['height'] - blocks_to_compare)
+                        if past_block is not None and past_block['height'] > 0 and not past_block.get('timestamp') is not None:
+                            past_block = self.full_node_api.get_block_record(past_block['prev_hash'])
 
-                    average_block_time = (curr_block['timestamp'] - past_block['timestamp']) / (curr_block['height'] - past_block['height'])
-            except (TypeError, KeyError):
-                log.debug(traceback.format_exc())
-                pass
+                        average_block_time = (curr_block['timestamp'] - past_block['timestamp']) / (curr_block['height'] - past_block['height'])
+                except (TypeError, KeyError):
+                    log.debug(traceback.format_exc())
+                    pass
 
             proportion = farmer['total_size_of_plots'] / farmer['estimated_network_space'] if farmer['estimated_network_space'] else -1
             minutes = int((average_block_time / 60) / proportion) if proportion else -1
