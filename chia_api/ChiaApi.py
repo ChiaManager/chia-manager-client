@@ -60,7 +60,7 @@ class ChiaApi:
 
         return result
 
-    def get_status(self, service_name: str) -> bool:
+    def get_status(self) -> bool:
         if self.service_name is None:
             return False
 
