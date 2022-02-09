@@ -1,4 +1,4 @@
-# chia-node-client
+# chia-manager-client
 The Chia Node Client is the agent part of [chia-web-gui](https://github.com/OLED1/chia-web-gui).
 
 # Requirements
