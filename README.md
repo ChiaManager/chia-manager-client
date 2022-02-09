@@ -1,5 +1,5 @@
 # chia-manager-client
-The Chia Node Client is the agent part of [chia-web-gui](https://github.com/OLED1/chia-web-gui).
+The Chia Node Client is the agent part of [chia-web-gui](https://github.com/OLED1/chia-manager).
 
 # Requirements
 - RedHat (Fedora/Centos/RHEL) or Debian (Debian/Ubuntu/...) based OS
