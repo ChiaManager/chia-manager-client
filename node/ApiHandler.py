@@ -150,7 +150,7 @@ class ApiHandler:
             if wallets is None:
                 log.debug(f"No Wallets found!")
                 return self._formated_info(
-                    namestpace="ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api",
+                    namespace="ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api",
                     method="updateWalletTransactions",
                 )
 
