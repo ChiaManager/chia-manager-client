@@ -287,7 +287,7 @@ After = network.target
 Type = simple
 WorkingDirectory = $CHIA_MANAGER_CLIENT_DIR
 ExecStart = $(pipenv --venv)/bin/python run_client.py
-User = $(whoami)
+User = $CURRENT_USER
 Restart = on-failure
 SyslogIdentifier = chia-manager-client
 
