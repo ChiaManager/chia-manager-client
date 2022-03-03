@@ -11,9 +11,6 @@ from chia_api.ChiaFullNodeApi import ChiaFullNodeApi
 from chia_api.ChiaHarvesterApi import ChiaHarvesterApi
 from chia_api.ChiaFarmerApi import ChiaFarmerApi
 
-import websocket
-
-
 log = logging.getLogger()
 
 
