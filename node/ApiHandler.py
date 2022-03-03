@@ -1,5 +1,6 @@
 import logging
 import traceback
+import asyncio
 from typing import Union, Any
 
 from node.ChiaHandler import ChiaHandler
@@ -18,8 +19,7 @@ log = logging.getLogger()
 
 class ApiHandler:
 
-    def __init__(self, websocket: websocket.WebSocketApp):
-        self.websocket = websocket
+    def __init__(self):
         self.node_config = NodeConfig()
         self.chia_handler = ChiaHandler()
         self.system_info = SystemInfo()
@@ -44,7 +44,7 @@ class ApiHandler:
             'restartHarvesterService': self._restart_harvester_service,
         }
 
-    def handle(self, command: dict) -> Union[dict, None]:
+    async def handle(self, command: dict) -> Union[dict, None]:
         """Handle incomming socket commands.
 
         Args:

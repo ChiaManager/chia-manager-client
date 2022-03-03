@@ -1,6 +1,6 @@
 import logging
 import os
-import json
+import asyncio
 import sys
 import traceback
 
@@ -36,7 +36,7 @@ def restart_script():
     sys.exit()
 
 
-def main():
+async def main():
     log.info(f"Node version: {__version__}")
     
     # disallow run as root.
@@ -55,15 +55,17 @@ def main():
 
     log.info("Starting websocket node.")
 
-    NodeWebsocket().start_websocket()
+    ws = await NodeWebsocket()
+    await ws.start()
 
 
 if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
 
     try:
-        main()
+        loop.run_until_complete(main())
     except KeyboardInterrupt:
-        log.info("Ctrl+C was pressed. Stopping Script. Bye.")
+        log.info("Ctrl+C was pressed. Node client stopped. Bye.")
     except Exception:
         log.error(traceback.format_exc())
     finally:

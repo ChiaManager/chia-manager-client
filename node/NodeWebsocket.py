@@ -2,75 +2,110 @@ import sys
 import json
 import logging
 import traceback
-import inspect
 import time
-from typing import Tuple, Any
-from functools import partial
+import asyncio
+from typing import Any
 from pathlib import Path
 
-from websocket import WebSocketApp
-from websocket._exceptions import WebSocketConnectionClosedException
+import websockets
 
 from node.ApiHandler import ApiHandler
 from node.NodeConfig import NodeConfig
 
-try:
-    import thread
-except ImportError:
-    import _thread as thread
-
 
 log = logging.getLogger()
+logging.getLogger("websockets").setLevel(logging.DEBUG)
 
+class NodeWebsocket():
+    def __await__(self):
+        return self._async_init().__await__()
 
-class NodeWebsocket:
+    async def _async_init(self) -> None:
+        self._conn = websockets.connect(NodeConfig().get_connection())
+        self.socket = None
 
-    def __init__(self):
-        log.info(f"Websocket connection: {NodeConfig().get_connection()}")
         self.node_config = NodeConfig()
-
-        on_message = partial(self.catch_exc_on_message)
-        on_error = partial(self.on_error)
-        on_close = partial(self.on_close)
-
-        self.socket = WebSocketApp(
-            NodeConfig().get_connection(),
-            on_open=partial(self.on_open),
-            on_message=on_message,
-            on_error=on_error,
-            on_close=on_close
-        )
-
-        self.thread_restart = False
-        self.thread_closed = False
         self.stop_websocket = False
+
+        return self
+
+    async def __aexit__(self, *args, **kwargs):
+        await self.close()
+
+    async def close(self) -> None:
+        await self._conn.__aexit__(*sys.exc_info())
+
+    async def send(self, message: Any):
+        await self.socket.send(message)
+
+    async def receive(self) -> str:
+        return await self.socket.recv()
+
+    async def _ping(self) -> None:
+        """Sends a 0 byte Frame to keep alive. 
+        
+        This is required because the normal keepalive ping/pong is not enough
+        to keep the connection alive.
+        """
+        while not self.stop_websocket:
+            log.info("Send keep alive.")
+            await self.send('')
+            await asyncio.sleep(25)
+
+    async def connect(self, is_reconnect: bool = False) -> None:
+        """Creates a connection to server and do login.
+
+        Args:
+            is_reconnect (bool, optional): If is reconnect. Defaults to False.
+        """
+        if is_reconnect and self.socket.open:
+            await self.close()
+
+        self.socket = None
+        while self.socket is None:
+            try:
+                self.socket = await self._conn.__aenter__()
+            except websockets.exceptions.InvalidStatusCode:
+                log.error("Could not reach server websocket!")
+                log.exception(traceback.format_exc())
+                asyncio.sleep(1)
+        
+        await self._login()
+
+    async def _login(self):
+        log.info("Login..")
+        while not await self.get_login_status():
+            log.info("Waiting for login on server..")
+            time.sleep(5)
+        
+        log.info("Node login was successful.")
+
+    async def start(self):
+        await self.connect()
+
+        # create paralel task for keepalive ping
+        asyncio.create_task(self._ping())
+
+        while not self.stop_websocket:
+            try:
+                recived_data = await self.receive()
+                asyncio.create_task(self._on_message(recived_data))
+            except websockets.exceptions.ConnectionClosedOK:
+                await self.connect(is_reconnect=True)
+            except Exception:
+                if self.stop_websocket:
+                    break
+                else:
+                    await self.connect(is_reconnect=True)
+        
+        self.close()
 
     @staticmethod
     def _json_serialize(obj: Any) -> Any:
         if isinstance(obj, Path):
             return obj.as_posix()
 
-    def start_websocket(self, *args, **kwargs):
-        """Starts a new Websocket."""
-
-        log.debug(f"inspect.stack()[1][3]: {inspect.stack()[1][3]}")
-        self.thread_restart = False
-
-        if not self.stop_websocket:
-            #websocket.enableTrace(True)
-            self.socket.run_forever(ping_interval=5)
-
-    def catch_exc_on_message(self, *args, **kwargs):
-        """Runs self._on_message() and catch raised exceptions."""
-
-        log.debug(f"args: {args}")
-        log.debug(f"len(args): {len(args)}")
-        try:
-            self._on_message(*args, **kwargs)
-        except Exception:
-            log.exception(traceback.format_exc())
-
-    def _on_message(self, websocket: WebSocketApp, message: str) -> None:
+    async def _on_message(self, message: str) -> None:
         """Receives the incomming socket data.
 
         Args:
@@ -84,7 +119,7 @@ class NodeWebsocket:
             log.debug(command)
             return
 
-        api_result = ApiHandler(self.socket).handle(command)
+        api_result = await ApiHandler().handle(command)
 
         log.debug(f"api_result: {api_result}")
         try:
@@ -92,74 +127,21 @@ class NodeWebsocket:
                 if 0 in api_result:
                     for key in api_result:
                         try:
-                            websocket.send(
+                            self.send(
                                 json.dumps(api_result[key])
                             )
                         except Exception:
                             log.exception(traceback.format_exc())
                 else:
-                    websocket.send(json.dumps(api_result, default=self._json_serialize))
+                    await self.send(json.dumps(api_result, default=self._json_serialize))
         except Exception:
             log.exception(traceback.format_exc())
 
-    def on_error(self, websocket, error, *args, **kwargs):
-        log.error("Websocket node closed unexpected.")
-        log.error(error)
-        if error and hasattr(error, 'status_code'):
-            log.error(f"{error.status_code}: {error}")
-
-            if error.status_code >= 400:
-                log.error(f"Critical websocket or server error, wait 15 seconds before continue.")
-                time.sleep(15)
-
-        if self.stop_websocket or self.thread_restart:
-            websocket.close()
-
-    def on_close(self, websocket, error, *args, **kwargs):
-        """Close the Application or restart the websocket on error.
-
-        Args:
-            websocket (WebsSocketApp): Current WebSocketApp instance.
-            error (str): Occoured error message.
-        """
-        log.error("Websocket node closed.")
-        log.error(f"error: {error}")        
-        
-        if self.stop_websocket:
-            self.thread_closed = True
-            sys.exit(0)
-
-        # wait 5 sec to prevent a stack overflow
-        time.sleep(.5)
-        self.thread_restart = True
-        self.start_websocket()
-                
-
-    def on_open(self, *args, **kwargs) -> None:
-        """Waits for login on Server."""
-
-        while not self.get_login_status()[0]:
-            log.info("Waiting for login on server..")
-            time.sleep(5)
-        
-        if self.thread_restart:
-            self.socket.close()
-            log.debug(f"self.thread_restart: {self.thread_restart}")
-            try:
-                while not self.thread_closed:
-                    log.debug(f"Thread not closed.. wait 6 seconds and check again..")
-                    time.sleep(6)
-                
-                self.thread_closed = False
-            except KeyboardInterrupt:
-                exit(0)
-                
-
-    def get_login_status(self) -> Tuple[bool, dict]:
+    async def get_login_status(self) -> bool:
         """Get the Node login status from defined Server
 
         Returns:
-            Tuple[bool, dict]: Login status and message from server.
+            bool: True if client is logged in
         """
 
         log.debug(f"Using auth_hash: {NodeConfig().auth_hash}")
@@ -181,13 +163,11 @@ class NodeWebsocket:
         )
 
         try:
-            self.socket.send(data)
-            login_result = json.loads(self.socket.sock.recv())
-        except WebSocketConnectionClosedException:
-            self.start_websocket()
+            await self.send(data)
+            login_result = json.loads(await self.receive())
         except Exception:
             log.exception(traceback.format_exc())
-            return False, {}
+            return False
 
         log.debug(f"login status: {login_result}")
         login_status_code = login_result['loginStatus']['status']
@@ -204,8 +184,7 @@ class NodeWebsocket:
                 log.error(traceback.format_exc())
             log.debug(f"New auth_hash: {self.node_config.auth_hash}")
 
-
         elif login_status_code == 0:
-            return True, login_result
+            return True
         
-        return False, login_result
+        return False
