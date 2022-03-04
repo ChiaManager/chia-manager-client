@@ -119,12 +119,12 @@ class NodeConfig(ConfigParser):
     def _check_log_and_config_path(self):
 
         if not self.config_dir.exists():
-            log.info(f"Config folder does not exists. Create: {self.config_dir}")
+            print(f"Config folder does not exists. Create: {self.config_dir}")
             os.makedirs(self.config_dir)
 
         if not self.chia_config_file.exists():
-            log.info("Config file does not exists!")
-            log.info("Please configure your settings in node/node.ini \n" \
+            print("Config file does not exists!")
+            print("Please configure your settings in node/node.ini \n" \
                      "The sample file can be found at: node/example.node.ini\n" \
                      "Exiting..")
             sys.exit(0)
