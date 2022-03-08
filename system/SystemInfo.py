@@ -101,7 +101,7 @@ class SystemInfo:
             'physical_cores': psutil.cpu_count(),
             'logical_cores': psutil.cpu_count(logical=True),
             'model': platform.processor(),
-            'usage': psutil.cpu_percent(),
+            'usage': psutil.cpu_percent(percpu=True),
             'load': {
                 '1min': load_avg[0],
                 '5min': load_avg[1],
