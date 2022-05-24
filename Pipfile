@@ -5,11 +5,8 @@ name = "pypi"
 
 [packages]
 psutil = "*"
-websocket-client = "*"
 requests = "*"
 websockets = "*"
-
-[dev-packages]
 
 [requires]
 python_version = "3.9"
