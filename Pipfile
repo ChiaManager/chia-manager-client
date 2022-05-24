@@ -3,6 +3,9 @@ url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
+[dev-packages]
+pyoxidizer = {version = "*", sys_platform = "== 'win32'"}
+
 [packages]
 psutil = "*"
 requests = "*"
