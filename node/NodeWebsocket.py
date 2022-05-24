@@ -25,6 +25,7 @@ class NodeWebsocket():
         self.socket = None
 
         self.node_config = NodeConfig()
+        self.api_handler = ApiHandler()
         self.stop_websocket = False
 
         return self
@@ -119,7 +120,8 @@ class NodeWebsocket():
             log.debug(command)
             return
 
-        api_result = await ApiHandler().handle(command)
+        log.debug(f"command: {command}")
+        api_result = await self.api_handler.handle(command)
 
         log.debug(f"api_result: {api_result}")
         try:

@@ -45,14 +45,19 @@ class ChiaHandler:
         if not IS_WINDOWS:
             # check if chia .activate file exists (linux)
             if self.chia_venv_activation_path and not self.chia_venv_activation_path.is_file():
-            log.error("Activate file not found. Did you installed chia-blockchain?")
+                log.error("Activate file not found. Did you installed chia-blockchain?")
                 log.error(f"path: {self.chia_venv_activation_path}")
-            sys.exit(0)
+                sys.exit(0)
 
         self.chia_paths_exist = True
         return True
 
-    def get_chia_paths(self):
+    async def get_chia_paths(self):
+        return {
+            'version': await ChiaDaemon().get_chia_version(),
+            'path': self.chia_cli_file
+        }
+
         if not self.chia_paths_exist:
             log.debug(f"self.chia_paths_exist: {self.chia_paths_exist}")
             return {}

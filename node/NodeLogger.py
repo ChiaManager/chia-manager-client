@@ -1,4 +1,5 @@
 import logging
+from inspect import getsourcefile
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
@@ -6,12 +7,13 @@ from node.NodeConfig import NodeConfig
 
 class NodeLogger:
     def __init__(self, log_level: int = logging.INFO):
-        self.log_config = NodeConfig().logging
+        self.node_cconfig = NodeConfig()
 
-        self.log_dir = Path(self.log_config.get('' ,__file__)).absolute().parents[1].joinpath('log')
-        self.log_level = self.log_config.get('log_level', log_level)
-        self.log_backup_count = int(self.log_config.get('log_backup_count', 3))
-        self.log_to_stdout = self.log_config.get('log_to_stdout', False)
+        self.log_dir = Path(getsourcefile(lambda:0)).absolute().parents[1].joinpath('log')
+        self.log_level = self.node_cconfig['Logging'].get('log_level') or log_level
+
+        self.log_backup_count = self.node_cconfig['Logging']['log_level'] or 3
+        self.log_to_stdout = self.node_cconfig['Logging']['log_to_stdout'] or False
 
         self.__setup_logger()
 

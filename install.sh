@@ -21,7 +21,7 @@ CHIA_MANAGER_CLIENT_DIR=`dirname "$SCRIPT_PATH"`
 CURRENT_USER=`whoami`
 SYSTEMD_INSTALL_PATH="/etc/systemd/system/"
 
-REQUIRED_PYTHON_VERSION = "3.9"
+REQUIRED_PYTHON_VERSION="3.9"
 MINPYTHON="390"
 MAXPYTHON="31200"
 PYTHON_VERSIONS=("" "3" "3.9" "39" "390")
@@ -251,7 +251,7 @@ port = $server_port
 socketdir = $socketdir
 
 [Chia]
-chia_blockchain_path = $chia_blockchain_path
+chia_path = $chia_blockchain_path
 
 [Logging]
 log_level = ERROR

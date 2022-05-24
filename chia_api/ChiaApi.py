@@ -5,9 +5,10 @@ import json
 import traceback
 from pathlib import Path
 
+import psutil
 from requests.exceptions import ConnectionError, ReadTimeout
 
-import psutil
+from node.NodeConfig import NodeConfig
 
 
 log = logging.getLogger()
@@ -64,4 +65,15 @@ class ChiaApi:
         if self.service_name is None:
             return False
 
-        return self.service_name in [p.name() for p in psutil.process_iter()]
+        ## Winodoof
+        # Chia.exe = GUI
+        # daemon.exe
+        # start_farmer.exe
+        # start_full_node.exe
+        # start_harvester.exe
+        # start_wallet.exe
+
+        # currently not supported:
+        # start_introducer.exe
+        # start_timelord.exe
+        return self.service_name in [p.name()for p in psutil.process_iter()]

@@ -152,6 +152,7 @@ class ApiHandler:
                 return self._formated_info(
                     namespace="ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api",
                     method="updateWalletTransactions",
+                    data={},
                 )
 
             transactions = {}
@@ -239,7 +240,7 @@ class ApiHandler:
 
             return self._formated_info(
                 namespace="ChiaMgmt\\Chia_Harvester\\Chia_Harvester_Api",
-                method="updateHarvesterData", 
+                method="updateHarvesterData",
                 data=data
             )
 
