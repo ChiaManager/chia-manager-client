@@ -6,6 +6,7 @@ from typing import Union, Any
 from node.ChiaHandler import ChiaHandler
 from node.NodeConfig import NodeConfig
 from system.SystemInfo import SystemInfo
+from chia_api.ChiaDaemon import ChiaDaemon
 from chia_api.ChiaWalletApi import ChiaWalletApi
 from chia_api.ChiaFullNodeApi import ChiaFullNodeApi
 from chia_api.ChiaHarvesterApi import ChiaHarvesterApi
@@ -21,6 +22,7 @@ class ApiHandler:
         self.chia_handler = ChiaHandler()
         self.system_info = SystemInfo()
 
+        self.chia_daemon = ChiaDaemon()
         self.full_node_api = ChiaFullNodeApi()
         self.chia_wallet_api = ChiaWalletApi()
         self.harvester_api = ChiaHarvesterApi()
@@ -38,6 +40,7 @@ class ApiHandler:
             'queryWalletTransactions': self._get_wallet_transactions,
             'restartFarmerService': self._restart_farmer_service,
             'restartWalletService': self._restart_wallet_service,
+            'restart_chia_daemon': self._start_chia_daemon,
             'restartHarvesterService': self._restart_harvester_service,
         }
 
@@ -270,4 +273,11 @@ class ApiHandler:
             namespace="ChiaMgmt\\Chia_Harvester\\Chia_Harvester_Api",
             method="harvesterServiceRestart", 
             data=self.harvester_api.start(restart=True)
+        )
+
+    async def _start_chia_daemon(self):
+        return self._formated_info(
+            namespace="ChiaMgmt\\Chia_Harvester\\Chia_Daemon_Api",
+            method="harvesterServiceRestart", 
+            data=self.chia_daemon.start()
         )
