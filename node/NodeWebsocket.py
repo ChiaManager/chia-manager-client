@@ -179,7 +179,11 @@ class NodeWebsocket():
         if login_status_code in ["010005006", "010005013"] or auth_hash is not None and self.node_config.auth_hash != login_result['loginStatus']['data']['authhash']:
             log.info("Got new auth hash! Write to config.")
             try:
-                self.node_config.update_config("node", "authhash", login_result['loginStatus']['data']['authhash'])
+                self.node_config.update_config(
+                    "Node", "authhash", 
+                    login_result['loginStatus']['data']['authhash'], 
+                    reload=True
+                )
             except Exception:
                 log.error(traceback.format_exc())
             log.debug(f"New auth_hash: {self.node_config.auth_hash}")
