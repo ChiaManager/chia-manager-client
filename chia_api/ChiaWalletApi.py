@@ -1,15 +1,8 @@
-import logging
-import json
-from typing import Union
-from pprint import pprint
-from pathlib import Path
 
-from chia_api.ChiaApi import ChiaApi, log
-
-import requests
-
+from chia_api.ChiaApi import ChiaApi
 from chia_api.ChiaDaemon import ChiaDaemon
 from chia_api.constants import ServicesForGroup
+from system.SystemInfo import IS_WINDOWS
 
 
 class ChiaWalletApi(ChiaApi):
@@ -17,7 +10,7 @@ class ChiaWalletApi(ChiaApi):
         super(ChiaWalletApi, self).__init__()
         # TODO: read ports from ~/.chia/mainnet/config/config.yaml
         self.port = 9256
-        self.service_name = "chia_wallet"
+        self.service_name = "start_wallet.exe" if IS_WINDOWS else "chia_wallet"
     
     async def start(self, restart: bool = False):
         return await ChiaDaemon().start_service(service=ServicesForGroup.WALLET_ONLY, restart=restart)    

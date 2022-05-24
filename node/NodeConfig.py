@@ -2,12 +2,14 @@ import sys
 import os
 import socket
 import logging
+from inspect import getsourcefile
 from typing import Union, Any
 from pathlib import Path
 from ast import literal_eval
 from configparser import ConfigParser, NoSectionError
 
 from node import __version__
+from system.SystemInfo import IS_WINDOWS
 
 log = logging.getLogger()
 
@@ -17,8 +19,7 @@ class NodeConfig(ConfigParser):
 
     def __init__(self):
         super().__init__(allow_no_value=True)
-        
-        root_path = Path(os.path.realpath(__file__)).parent
+        root_path = Path(getsourcefile(lambda:0)).parent.absolute()
         self.config_dir = Path(root_path).parent.joinpath('config')
         self.chia_config_file = self.config_dir.joinpath('node.ini')
 
@@ -32,13 +33,13 @@ class NodeConfig(ConfigParser):
         self.key_convert_map = {
             'server': str,
             'socketdir': str,
-            'chia_blockchain_path': Path, 
+            'chia_blockchain_cli': Path,
             'log_path': Path,
             'authhash': str, 
             'log_level': lambda level : logging._nameToLevel[level]  if level.isalpha() else int(level)
         }
-        self._check_log_and_config_path()
 
+        self._check_log_and_config_path()
         self.load_config()
  
     @classmethod
@@ -46,6 +47,11 @@ class NodeConfig(ConfigParser):
         if cls not in cls._instances:
             cls._instances[cls] = super(NodeConfig, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
+    def __getitem__(self, key):
+        if key != self.default_section and not self.has_section(key):
+            return None
+        return self._proxies[key]
 
     def load_config(self):              
         log.debug(f"self.chia_config_file: {self.chia_config_file}")
@@ -62,6 +68,8 @@ class NodeConfig(ConfigParser):
 
         if self.has_option('Chia','chia_blockchain_path'):
             self.chia_blockchain_path = format(self["Chia"]["chia_blockchain_path"])
+        else:
+            self.chia_blockchain_path = self._get_chia_cli_path()
         
         # log config
         self.logging = self['Logging']
@@ -96,25 +104,39 @@ class NodeConfig(ConfigParser):
     def get_connection(self):
         return f"wss://{self.__server}:{self.__port}{self.__socket_dir}"
 
-    def get_chia_path(self):
-        return self["Chia"]["chia_blockchain_path"]
+    def _get_chia_cli_path(self):
+        if IS_WINDOWS:
+            for e in os.scandir(Path(os.getenv('LOCALAPPDATA'), 'chia-blockchain')):
+                if e.is_dir() and e.name.startswith('app-'):
+                    self.update_config(
+                        "Chia", "chia_blockchain_cli",
+                        value=os.path.join(e.path, 'resources', 'app.asar.unpacked', 'daemon','chia.exe'),
+                        reload=False
+                    )
+                    break
+                
+        return self["Chia"]["chia_blockchain_cli"]
 
-    def update_config(self, section, key, value):
+    def update_config(self, section: str, key: str, value: Any, reload: bool = True):
         log.debug("Write new config..")
         section = section.capitalize()
         # create section if not already exist
         if not self.has_section(section):
             self[section] = {}
 
+        if type(value) == Path:
+            value = str(value)
+
         self[section][key] = value
         with open(self.chia_config_file, "w") as conf:
-            print(conf)
             self.write(conf)
 
         log.debug("Write new config.. Done!")
-        log.debug("Reload config..")
-        self.load_config()
-        log.debug("Reload config.. Done!")
+
+        if reload:
+            log.debug("Reload config..")
+            self.load_config()
+            log.debug("Reload config.. Done!")
 
     def _check_log_and_config_path(self):
 
@@ -124,7 +146,9 @@ class NodeConfig(ConfigParser):
 
         if not self.chia_config_file.exists():
             print("Config file does not exists!")
-            print("Please configure your settings in node/node.ini \n" \
-                     "The sample file can be found at: node/example.node.ini\n" \
-                     "Exiting..")
+            print(
+                "Please configure your settings in node/node.ini \n" \
+                "The sample file can be found at: node/example.node.ini\n" \
+                "Exiting.."
+            )
             sys.exit(0)

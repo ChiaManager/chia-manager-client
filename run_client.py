@@ -7,17 +7,21 @@ import traceback
 import psutil
 import subprocess
 from pathlib import Path
+from inspect import getsourcefile
+from chia_api.ChiaDaemon import ChiaDaemon
 
 from node import __version__
 from node.NodeConfig import NodeConfig
 from node.ChiaHandler import ChiaHandler
 from node.NodeLogger import NodeLogger
 from node.NodeWebsocket import NodeWebsocket
+from system.SystemInfo import IS_WINDOWS
 
+
+__file__ = getsourcefile(lambda:0)
 NodeLogger()
 log = logging.getLogger()
 node_config = NodeConfig()
-
 interrupt = False
 
 
@@ -38,15 +42,16 @@ def restart_script():
 
 async def main():
     log.info(f"Node version: {__version__}")
-    
+
     # disallow run as root.
-    if os.geteuid() == 0:
+    if not IS_WINDOWS and os.geteuid() == 0:
         raise Exception("Run as root user not allowed!")
 
     chia_interpreter = ChiaHandler()
+    chia_paths = await chia_interpreter.get_chia_paths()
     log.info(
         f"Starting ChiaNode python script Version: {node_config.get_script_info()} and "
-        f"Chia Version: {chia_interpreter.get_chia_paths().get('version')}."
+        f"Chia Version: {chia_paths.get('version')}."
     )
 
     if already_running():

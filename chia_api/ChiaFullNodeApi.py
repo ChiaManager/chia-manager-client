@@ -1,12 +1,13 @@
 from chia_api.ChiaApi import ChiaApi
+from system.SystemInfo import IS_WINDOWS
 
 
 class ChiaFullNodeApi(ChiaApi):
     def __init__(self):
         super(ChiaFullNodeApi, self).__init__()
         self.port = 8555
-        self.service_name = "chia_full_node"
-            
+        self.service_name = "start_full_node.exe" if IS_WINDOWS else "chia_full_node"
+
     async def get_blockchain_state(self):
         return self._send_request('get_blockchain_state').get('blockchain_state', {})
         

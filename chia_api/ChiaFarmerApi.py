@@ -1,13 +1,14 @@
 from chia_api.ChiaApi import ChiaApi
 from chia_api.ChiaDaemon import ChiaDaemon
 from chia_api.constants import ServicesForGroup
+from system.SystemInfo import IS_WINDOWS
 
 
 class ChiaFarmerApi(ChiaApi):
     def __init__(self):
         super(ChiaFarmerApi, self).__init__()
         self.port = 8559
-        self.service_name = "chia_farmer"
+        self.service_name = "start_farmer.exe" if IS_WINDOWS else "chia_farmer"
     
     async def start(self, restart: bool = False):
         return await ChiaDaemon().start_service(service=ServicesForGroup.FARMER_ONLY, restart=restart)

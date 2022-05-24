@@ -1,12 +1,13 @@
 from chia_api.ChiaApi import ChiaApi, log
 from chia_api.ChiaDaemon import ChiaDaemon
 from chia_api.constants import ServicesForGroup
+from system.SystemInfo import IS_WINDOWS
 
 
 class ChiaHarvesterApi(ChiaApi):
     def __init__(self):
         super(ChiaHarvesterApi, self).__init__()
-        self.service_name = "chia_harvester"
+        self.service_name = "start_harvester.exe" if IS_WINDOWS else "chia_harvester"
         self.port = 8560
 
     async def start(self, restart: bool = False):
