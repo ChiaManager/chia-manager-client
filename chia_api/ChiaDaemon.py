@@ -73,7 +73,7 @@ class ChiaDaemon(ChiaApi):
             log.error("Couldn't load data from Chia daemon. Is the process running?")
         except Exception:
             log.exception(traceback.format_exc())
-
+        
         log.debug(res)
         return res
 
@@ -122,38 +122,31 @@ class ChiaDaemon(ChiaApi):
 
             return False
 
-        res = loop.run_until_complete(
-            self._send(command='get_version')
-        )
+    async def get_chia_version(self) -> Union[str, None]:
+        res = await self._send(command='get_version')
         
         return res.get('data', {}).get('version') or None
 
-    def start_service(self, service: ServicesForGroup, restart: bool = False) -> dict:
+    async def start_service(self, service: ServicesForGroup, restart: bool = False) -> dict:
         # TODO: remove duplicate code
         restart = True
         if restart:
-            loop = asyncio.get_event_loop()
-
             log.info(f"check is_running: {service.name}")
-            res = loop.run_until_complete(
-                self._send(
+            res = await self._send(
                     command='stop_service',
                     data={"service": service.value},
                     ack=False,
                 )
-            )
 
             log.debug(res)
 
         log.info(f"Start chia service: {service.name}")
 
-        res = loop.run_until_complete(
-            self._send(
+        res = await self._send(
                 command='start_service',
                 data={"service": service.value},
             )
-        )
-        
+
         res = res.get('data', {})
         if not res.get('success'):
             return {'success': False, 'error': res.get('error')}

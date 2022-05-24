@@ -1,6 +1,5 @@
 import logging
 import traceback
-import asyncio
 from typing import Union, Any
 
 from node.ChiaHandler import ChiaHandler

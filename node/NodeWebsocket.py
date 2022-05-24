@@ -127,7 +127,7 @@ class NodeWebsocket():
                 if 0 in api_result:
                     for key in api_result:
                         try:
-                            self.send(
+                            await self.send(
                                 json.dumps(api_result[key])
                             )
                         except Exception:
