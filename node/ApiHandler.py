@@ -112,6 +112,7 @@ class ApiHandler:
                 'wallet': self.chia_wallet_api.get_status(),
                 'farmer': self.farmer_api.get_status(),
                 'harvester': self.harvester_api.get_status(),
+                'daemon': self.chia_daemon.running(),
             }
         )
     
