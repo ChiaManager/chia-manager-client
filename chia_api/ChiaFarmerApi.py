@@ -9,14 +9,14 @@ class ChiaFarmerApi(ChiaApi):
         self.port = 8559
         self.service_name = "chia_farmer"
     
-    def start(self, restart: bool = False):
-        return ChiaDaemon().start_service(service=ServicesForGroup.FARMER_ONLY, restart=restart)
+    async def start(self, restart: bool = False):
+        return await ChiaDaemon().start_service(service=ServicesForGroup.FARMER_ONLY, restart=restart)
                 
-    def get_wallets(self):
+    async def get_wallets(self):
         return self._send_request('get_wallets')
         
-    def get_signage_points(self):
+    async def get_signage_points(self):
         return self._send_request('get_signage_points').get('signage_points', {})
 
-    def get_transactions(self, wallet_id: int):
+    async def get_transactions(self, wallet_id: int):
         return self._send_request('get_transactions', data={'wallet_id': wallet_id})

@@ -60,7 +60,7 @@ class ApiHandler:
             log.debug(f"Got message from API on command {key}: {command[key]['message']}")
 
             if command[key]["status"] == 0:
-                return self.request_map[key]()
+                return await self.request_map[key]()
             else:
                 log.info(command[key]['message'])
         else:
@@ -80,7 +80,7 @@ class ApiHandler:
             }
         }
 
-    def _get_system_info(self):
+    async def _get_system_info(self) -> dict:
 
         return self._formated_info(
             namespace="ChiaMgmt\\Chia_Infra_Sysinfo\\Chia_Infra_Sysinfo_Api",
@@ -88,19 +88,19 @@ class ApiHandler:
             data=self.system_info.get_system_info(),
         )
 
-    def _login_status(self):
+    async def _login_status(self) -> dict:
 
         return self._formated_info(
             namespace="ChiaMgmt\\Nodes\\Nodes_Api", 
             method="updateScriptVersion",
             data={
                 'scriptversion': self.node_config.get_script_info(),
-                'chia': self.chia_handler.get_chia_paths(),
+                'chia': await self.chia_handler.get_chia_paths(),
             },
             action="ownRequest",
         )
 
-    def _get_chia_status(self) -> dict:
+    async def _get_chia_status(self) -> dict:
 
         return self._formated_info(
             namespace="ChiaMgmt\\Nodes\\Nodes_Api",
@@ -112,7 +112,7 @@ class ApiHandler:
             }
         )
     
-    def _wallet_data(self) -> dict:
+    async def _wallet_data(self) -> dict:
         log.info("Get wallet data..")
         data = {}
 
@@ -139,7 +139,7 @@ class ApiHandler:
                 data=data,
             )
 
-    def _get_wallet_transactions(self):
+    async def _get_wallet_transactions(self):
             log.debug("queryWalletTransactions")
             
             wallets = self.chia_wallet_api.get_wallets().get('wallets', None)
@@ -163,7 +163,7 @@ class ApiHandler:
                 data=transactions,
             )
 
-    def _farmer_data(self) -> dict:
+    async def _farmer_data(self) -> dict:
         if self.farmer_api.get_status():
             farmed_amount = {}
         
@@ -179,13 +179,13 @@ class ApiHandler:
 
 
             farmer = {
-                'signage_points': self.farmer_api.get_signage_points(), # challenges
+                'signage_points': await self.farmer_api.get_signage_points(), # challenges
                 'total_size_of_plots': sum(map(lambda x: x["file_size"], plots)),
                 'plot_count': len(plots),
             }
 
             # get farming status and estimated network space
-            blockchain_state = self.full_node_api.get_blockchain_state()
+            blockchain_state = await self.full_node_api.get_blockchain_state()
             farmer['farming_status'] = blockchain_state.get('sync')
             farmer['estimated_network_space'] = blockchain_state.get('space')
 
@@ -197,18 +197,17 @@ class ApiHandler:
                 try:
                     curr_block = blockchain_state["peak"]
                     if curr_block is not None and curr_block['height'] > 0 and not curr_block.get('timestamp') is not None:
-                        curr_block = self.full_node_api.get_block_record(curr_block['prev_hash'])
+                        curr_block = await self.full_node_api.get_block_record(curr_block['prev_hash'])
 
                     if curr_block is not None:
                         # get the block from the past for calculation (curr block - 500)
-                        past_block = self.full_node_api.get_block_record_by_height(curr_block['height'] - blocks_to_compare)
+                        past_block = await self.full_node_api.get_block_record_by_height(curr_block['height'] - blocks_to_compare)
                         if past_block is not None and past_block['height'] > 0 and not past_block.get('timestamp') is not None:
-                            past_block = self.full_node_api.get_block_record(past_block['prev_hash'])
+                            past_block = await self.full_node_api.get_block_record(past_block['prev_hash'])
 
                         average_block_time = (curr_block['timestamp'] - past_block['timestamp']) / (curr_block['height'] - past_block['height'])
                 except (TypeError, KeyError):
                     log.debug(traceback.format_exc())
-                    pass
 
             proportion = farmer['total_size_of_plots'] / farmer['estimated_network_space'] if farmer['estimated_network_space'] else -1
             minutes = int((average_block_time / 60) / proportion) if proportion else -1
@@ -223,10 +222,10 @@ class ApiHandler:
                 data=data
             )
 
-    def _harvester_data(self) -> dict:
+    async def _harvester_data(self) -> dict:
         if self.harvester_api.get_status():
-            plot_directories = self.harvester_api.get_plot_directories()
-            plots = self.harvester_api.get_plots()
+            plot_directories = await self.harvester_api.get_plot_directories()
+            plots = await self.harvester_api.get_plots()
 
             data = {plot_path:[] for plot_path in plot_directories}
 
@@ -241,10 +240,10 @@ class ApiHandler:
                 data=data
             )
 
-    def _get_script_version(self) -> dict:
+    async def _get_script_version(self) -> dict:
         data = {}
         data["scriptversion"] = self.node_config.get_script_info()
-        data["chia"] = self.chia_handler.get_chia_paths()
+        data["chia"] = await self.chia_handler.get_chia_paths()
         
         return self._formated_info(
             namespace="ChiaMgmt\\Nodes\\Nodes_Api",
@@ -252,21 +251,21 @@ class ApiHandler:
             data=data
         )
 
-    def _restart_farmer_service(self):
+    async def _restart_farmer_service(self):
         return self._formated_info(
             namespace="ChiaMgmt\\Chia_Farm\\Chia_Farm_Api",
             method="farmerServiceRestart",
             data=self.farmer_api.start(restart=True)
         )   
 
-    def _restart_wallet_service(self):
+    async def _restart_wallet_service(self):
         return self._formated_info(
             namespace="ChiaMgmt\\Chia_Wallet\\Chia_Wallet_Api",
             method="walletServiceRestart", 
-            data=self.chia_wallet_api.start(restart=True)
+            data=await self.chia_wallet_api.start(restart=True)
         )
 
-    def _restart_harvester_service(self):
+    async def _restart_harvester_service(self):
         return self._formated_info(
             namespace="ChiaMgmt\\Chia_Harvester\\Chia_Harvester_Api",
             method="harvesterServiceRestart", 

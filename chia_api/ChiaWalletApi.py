@@ -19,8 +19,8 @@ class ChiaWalletApi(ChiaApi):
         self.port = 9256
         self.service_name = "chia_wallet"
     
-    def start(self, restart: bool = False):
-        return ChiaDaemon().start_service(service=ServicesForGroup.WALLET_ONLY, restart=restart)    
+    async def start(self, restart: bool = False):
+        return await ChiaDaemon().start_service(service=ServicesForGroup.WALLET_ONLY, restart=restart)    
 
     def get_wallets(self):
         return self._send_request('get_wallets')
