@@ -2,6 +2,7 @@
 .git
 config
 log
+build
 
 ### Python ###
 __pycache__/
