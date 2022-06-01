@@ -178,7 +178,7 @@ class ApiHandler:
             data = farmed_amount
 
             # get plot count and size
-            plots = self.harvester_api.get_plots()
+            plots = await self.harvester_api.get_plots()
             if 'plots' in plots: plots = plots.get('plots', [])
 
 
