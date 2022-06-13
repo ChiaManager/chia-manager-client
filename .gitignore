@@ -3,6 +3,8 @@
 config
 log
 build
+ChiaManagerClient.build
+ChiaManagerClient.dist
 
 ### Python ###
 __pycache__/
