@@ -1,14 +1,13 @@
-import logging
-import os
-import asyncio
-import sys
-import traceback
-
-import psutil
-import subprocess
 from pathlib import Path
 from inspect import getsourcefile
-from chia_api.ChiaDaemon import ChiaDaemon
+import sys
+import os
+import logging
+import asyncio
+import traceback
+import subprocess
+
+import psutil
 
 from node import __version__
 from node.NodeConfig import NodeConfig
@@ -21,7 +20,6 @@ from system.SystemInfo import IS_WINDOWS
 __file__ = getsourcefile(lambda:0)
 NodeLogger()
 log = logging.getLogger()
-node_config = NodeConfig()
 interrupt = False
 
 
@@ -40,8 +38,10 @@ def restart_script():
     sys.exit()
 
 
-async def main():
+async def main(websocket: NodeWebsocket):
     log.info(f"Node version: {__version__}")
+    
+    node_config = NodeConfig()
 
     # disallow run as root.
     if not IS_WINDOWS and os.geteuid() == 0:
@@ -55,23 +55,30 @@ async def main():
     )
 
     if already_running():
-        log.info("An instance of this script is already running. Ignoring...")
+        log.info("An instance of this script is already running. Exiting...")
         exit(0)
 
     log.info("Starting websocket node.")
 
-    ws = await NodeWebsocket()
-    await ws.start()
+    await websocket.start()
 
 
-if __name__ == "__main__":
+def run():
     loop = asyncio.get_event_loop()
+    ws = NodeWebsocket()
 
     try:
-        loop.run_until_complete(main())
+        loop.run_until_complete(main(ws))
     except KeyboardInterrupt:
         log.info("Ctrl+C was pressed. Node client stopped. Bye.")
     except Exception:
         log.error(traceback.format_exc())
     finally:
-        interrupt = True
+        # destroy tray icon on windows 
+        # if the exit was not triggered by the tray icon, it may not have been closed yet
+        if IS_WINDOWS:
+            ws.destroy_tray()
+
+
+if __name__ == "__main__":
+    run()
