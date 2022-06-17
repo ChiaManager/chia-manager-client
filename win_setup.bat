@@ -1,0 +1,1 @@
+pipenv run python -m nuitka "ChiaManagerClient.py" --standalone --follow-imports --include-package=websockets --include-package=psutil --noinclude-pytest-mode=nofollow --noinclude-setuptools-mode=nofollow --include-data-files=config\example.node.ini=config\example.node.ini --include-data-files=chia_manager.ico=chia_manager.ico
