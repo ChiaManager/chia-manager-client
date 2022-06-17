@@ -4,12 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [dev-packages]
-pyoxidizer = {version = "*", sys_platform = "== 'win32'"}
+nuitka = {version = "*", sys_platform = "== 'win32'"}
+ordered-set = "*"
 
 [packages]
 psutil = "*"
 requests = "*"
 websockets = "*"
+pywin32 = {version = "225", sys_platform = "== 'win32'"}
 
 [requires]
 python_version = "3.9"
