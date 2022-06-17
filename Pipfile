@@ -5,7 +5,7 @@ name = "pypi"
 
 [dev-packages]
 nuitka = {version = "*", sys_platform = "== 'win32'"}
-ordered-set = "*"
+ordered-set = {version = "*", sys_platform = "== 'win32'"}
 
 [packages]
 psutil = "*"
