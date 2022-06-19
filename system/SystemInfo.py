@@ -41,15 +41,16 @@ class SystemInfo:
             win_ver = sys.getwindowsversion()
             maj, min, build = win_ver.platform_version or win_ver[:3]
 
-            res['name'] = WIN_RELEASES.get((maj, min, build)) or win_ver
+            res['name'] = WIN_RELEASES.get((maj, min, build)) or win_ver # type: ignore
         else:
             res['name'] = platform.platform()
 
         return res
+
     @staticmethod
     def get_filesystem_info() -> list:
         file_system_info = []
-        
+
         for disk in psutil.disk_partitions():
             disk_usage = psutil.disk_usage(disk.device)
 
