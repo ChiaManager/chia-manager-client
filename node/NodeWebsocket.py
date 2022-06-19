@@ -30,7 +30,8 @@ class NodeWebsocket():
 
         self.stop_lock = Lock()
         self._stop_websocket = False
-        self.tray_icon = None
+        if IS_WINDOWS:
+            self.tray_icon = None
 
     @property
     def stop_websocket(self):
@@ -90,7 +91,7 @@ class NodeWebsocket():
                 # prevent error logging spam
                 if self.stop_websocket or error_count == 1 or error_count % 10 == 0:
                     return
-                    
+
                 log.error("Could not reach server websocket!")
                 log.exception(traceback.format_exc())
                 await asyncio.sleep(1)
@@ -100,17 +101,20 @@ class NodeWebsocket():
             except Exception:
                 log.exception(traceback.format_exc())
                 await asyncio.sleep(5)
-        
+
         await self._login()
 
     def destroy_tray(self):
-        self.tray_icon.destroy()
+        if IS_WINDOWS:
+            self.tray_icon.destroy()
 
     async def _create_tray(self):
         """Crate tray icon on Windows."""
-        if IS_WINDOWS:
-            self.tray_icon = TrayIcon(websocket_instance=self)
-            self.tray_icon.start()
+        if not IS_WINDOWS:
+            return
+
+        self.tray_icon = TrayIcon(websocket_instance=self)
+        self.tray_icon.start()
 
     async def _login(self):
         log.info("Login..")
@@ -121,7 +125,8 @@ class NodeWebsocket():
         log.info("Node login was successful.")
 
     async def start(self):
-        await self._create_tray()
+        if IS_WINDOWS:
+            await self._create_tray()
         await self.connect()
 
         # create paralel task for keepalive ping
