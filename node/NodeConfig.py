@@ -51,7 +51,18 @@ class NodeConfig(ConfigParser):
     def __getitem__(self, key):
         if key != self.default_section and not self.has_section(key):
             return None
+
         return self._proxies[key]
+
+    def _write_default_config(self):
+        print("Write default config..")
+        self.update_config('Connection', 'server', '127.0.0.1', False)
+        self.update_config('Connection', 'port', 443, False)
+        self.update_config('Connection', 'socketdir', '/chiamgmt', False)
+        self.update_config('Chia', 'chia_blockchain_cli', self._get_chia_cli_path(), False)
+        self.update_config('Logging', 'log_level', logging.ERROR, False)
+
+        print("Write default config.. Done!")
 
     def load_config(self):              
         log.debug(f"self.chia_config_file: {self.chia_config_file}")
@@ -150,7 +161,8 @@ class NodeConfig(ConfigParser):
             print("Config file does not exists!")
             print(
                 "Please configure your settings in node/node.ini \n" \
-                "The sample file can be found at: node/example.node.ini\n" \
-                "Exiting.."
+                "The sample file can be found at: node/example.node.ini"
             )
+
+            self._write_default_config()
             sys.exit(0)
