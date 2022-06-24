@@ -3,6 +3,7 @@ import requests
 import urllib3
 import json
 import traceback
+from typing import Union
 from pathlib import Path
 
 import psutil
@@ -25,7 +26,7 @@ class ChiaApi:
         self.port = None
         self.service_name = None
 
-    def _send_request(self, url_path: str, data: dict = None) -> str:
+    def _send_request(self, url_path: str, data: Union[dict, None] = None) -> dict:
         if self.port is None:
             raise Exception("Port is missing. Please specify a Port.")
             
