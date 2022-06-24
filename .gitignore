@@ -5,6 +5,7 @@ log
 build
 ChiaManagerClient.build
 ChiaManagerClient.dist
+installer_output
 
 ### Python ###
 __pycache__/
