@@ -106,7 +106,7 @@ class NodeConfig(ConfigParser):
         else:
             value = self._interpolation.before_get(self, section, option, value,d)
 
-            if self.key_convert_map.get(option):
+            if option in self.key_convert_map.keys():
                 return self.key_convert_map[option](value)
 
             return literal_eval(value)
