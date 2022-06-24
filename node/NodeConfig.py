@@ -132,10 +132,7 @@ class NodeConfig(ConfigParser):
         if not self.has_section(section):
             self[section] = {}
 
-        if type(value) == Path:
-            value = str(value)
-
-        self[section][key] = value
+        self[section][key] = str(value)
         with open(self.chia_config_file, "w") as conf:
             self.write(conf)
 
