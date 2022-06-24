@@ -239,8 +239,8 @@ else
     read -p "${INFTXT}Enter socketdir: (/chiamgmt)" socketdir
     if [[ $socketdir = "" ]] ;then socketdir='/chiamgmt'; fi
 
-    read -p "${INFTXT}Enter chia-blockchain folder path (/home/$(whoami)/chia-blockchain):" chia_blockchain_path
-    if [[ $chia_blockchain_path = "" ]] ;then chia_blockchain_path="/home/$CURRENT_USER/chia-blockchain"; fi
+    read -p "${INFTXT}Enter chia-blockchain folder path (/home/$(whoami)/chia-blockchain):" chia_blockchain_cli
+    if [[ $chia_blockchain_cli = "" ]] ;then chia_blockchain_cli="/home/$CURRENT_USER/chia-blockchain"; fi
 
     echo "${INFTXT}Writing new config..."
 
@@ -251,7 +251,7 @@ port = $server_port
 socketdir = $socketdir
 
 [Chia]
-chia_path = $chia_blockchain_path
+chia_blockchain_cli = $chia_blockchain_cli
 
 [Logging]
 log_level = ERROR

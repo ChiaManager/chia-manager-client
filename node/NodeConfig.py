@@ -28,7 +28,7 @@ class NodeConfig(ConfigParser):
         self.__port = None
         self.__socket_dir = None
         self.auth_hash = None
-        self.chia_blockchain_path = None
+        self.chia_blockchain_cli = None
         self.logging = {}
         self.key_convert_map = {
             'server': str,
@@ -66,10 +66,12 @@ class NodeConfig(ConfigParser):
         if self.has_option('Node', 'authhash'):
             self.auth_hash = format(self["Node"]["authhash"])
 
-        if self.has_option('Chia','chia_blockchain_path'):
-            self.chia_blockchain_path = format(self["Chia"]["chia_blockchain_path"])
+        if self.has_option('Chia','chia_blockchain_cli'):
+            self.chia_blockchain_cli = format(self["Chia"]["chia_blockchain_cli"])
         else:
-            self.chia_blockchain_path = self._get_chia_cli_path()
+            cli_path = self._get_chia_cli_path()
+            self.update_config('Chia','chia_blockchain_cli', cli_path)
+            self.chia_blockchain_cli = cli_path
         
         # log config
         self.logging = self['Logging']
@@ -105,7 +107,7 @@ class NodeConfig(ConfigParser):
         return f"wss://{self.__server}:{self.__port}{self.__socket_dir}"
 
     def _get_chia_cli_path(self):
-        if IS_WINDOWS:
+        if IS_WINDOWS and not self.has_option('Chia','chia_blockchain_cli'):
             for e in os.scandir(Path(os.getenv('LOCALAPPDATA'), 'chia-blockchain')):
                 if e.is_dir() and e.name.startswith('app-'):
                     self.update_config(
