@@ -41,7 +41,7 @@ class NodeConfig(ConfigParser):
 
         self._check_log_and_config_path()
         self.load_config()
- 
+
     @classmethod
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
@@ -69,6 +69,9 @@ class NodeConfig(ConfigParser):
 
         self.read(self.chia_config_file)
         connection_info = self['Connection']
+
+        if connection_info is None:
+            raise Exception("Server connection settings not specified!")
 
         self.__server = format(connection_info["server"])
         self.__port = format(connection_info["port"])
