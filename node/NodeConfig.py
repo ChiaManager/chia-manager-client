@@ -121,13 +121,8 @@ class NodeConfig(ConfigParser):
         if IS_WINDOWS and not self.has_option('Chia','chia_blockchain_cli'):
             for e in os.scandir(Path(os.getenv('LOCALAPPDATA'), 'chia-blockchain')):
                 if e.is_dir() and e.name.startswith('app-'):
-                    self.update_config(
-                        "Chia", "chia_blockchain_cli",
-                        value=os.path.join(e.path, 'resources', 'app.asar.unpacked', 'daemon','chia.exe'),
-                        reload=False
-                    )
-                    break
-                
+                    self.update_config('Chia','chia_blockchain_cli', Path(e.path, 'resources', 'app.asar.unpacked', 'daemon','chia.exe'), True)
+
         return self["Chia"]["chia_blockchain_cli"]
 
     def update_config(self, section: str, key: str, value: Any, reload: bool = True):
