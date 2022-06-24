@@ -8,6 +8,7 @@ import asyncio
 from typing import Any
 from pathlib import Path
 
+from websockets.exceptions import ConnectionClosedError, InvalidStatusCode
 import websockets
 
 from node.ApiHandler import ApiHandler
@@ -85,16 +86,24 @@ class NodeWebsocket():
             try:
                 self.socket = await self._conn.__aenter__()
                 error_count = 0
-            except (websockets.exceptions.InvalidStatusCode, asyncio.exceptions.TimeoutError):
+            except (ConnectionClosedError, InvalidStatusCode, asyncio.exceptions.TimeoutError):
                 error_count += 1
 
                 # prevent error logging spam
                 if self.stop_websocket or error_count == 1 or error_count % 10 == 0:
-                    return
+                    await asyncio.sleep(2)
+                    continue
 
-                log.error("Could not reach server websocket!")
+                log.error("Could not reach server websocket! Wait 30 seconds before retry.")
                 log.exception(traceback.format_exc())
-                await asyncio.sleep(1)
+                await asyncio.sleep(30)
+            except ConnectionRefusedError:
+                log.error(
+                    "Could not connect to websocketserver. "\
+                    "Please check if the server is running and your firewall on both sites allow the connection. "\
+                )
+                log.error("Wait 30 seconds before retry..")
+                await asyncio.sleep(30)
             except asyncio.exceptions.CancelledError:
                 if self.stop_websocket:
                     return
