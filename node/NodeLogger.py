@@ -7,13 +7,13 @@ from node.NodeConfig import NodeConfig
 
 class NodeLogger:
     def __init__(self, log_level: int = logging.INFO):
-        self.node_cconfig = NodeConfig()
+        self.node_config = NodeConfig()
 
         self.log_dir = Path(getsourcefile(lambda:0)).absolute().parents[1].joinpath('log')
-        self.log_level = self.node_cconfig['Logging'].get('log_level') or log_level
+        self.log_level = self.node_config.get('Logging' ,'log_level') or log_level
 
-        self.log_backup_count = self.node_cconfig['Logging']['log_level'] or 3
-        self.log_to_stdout = self.node_cconfig['Logging']['log_to_stdout'] or False
+        self.log_backup_count = self.node_config.get('Logging', 'log_level') or 3
+        self.log_to_stdout = self.node_config.get('Logging', 'log_to_stdout') or False
 
         self.__setup_logger()
 
