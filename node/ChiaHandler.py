@@ -22,7 +22,9 @@ class ChiaHandler:
 
         self.chia_cli_file = self.node_config.get("Chia", "chia_blockchain_cli")
         
-        if not IS_WINDOWS and self.chia_path:
+        if not IS_WINDOWS and os.path.exists("/usr/bin/chia"):
+            self.chia_cli_file = "/usr/bin/chia"
+        elif not IS_WINDOWS and self.chia_cli_file:
             self.chia_cli_file = self.chia_cli_file.joinpath('activate')
 
         self.check_chia_paths()
@@ -30,7 +32,7 @@ class ChiaHandler:
     def check_chia_paths(self):
         log.info(f"Checking chia path: '{self.chia_cli_file}'")
 
-        if self.chia_cli_file is None or not self.chia_cli_file.exists():
+        if self.chia_cli_file is None or not os.path.exists(self.chia_cli_file):
             log.error(f"Could not find Chia path: {self.chia_cli_file}")
             log.error(f"Please set [Chia][chia_path] in your node.ini.")
 
@@ -42,7 +44,7 @@ class ChiaHandler:
             
             sys.exit(0)
 
-        if not IS_WINDOWS:
+        if not IS_WINDOWS and not os.path.exists("/usr/bin/chia"):
             # check if chia .activate file exists (linux)
             if self.chia_venv_activation_path and not self.chia_venv_activation_path.is_file():
                 log.error("Activate file not found. Did you installed chia-blockchain?")
